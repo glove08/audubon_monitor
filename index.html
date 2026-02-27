@@ -361,9 +361,9 @@ function App(){
       .catch(e=>{setError(e.message);document.getElementById("loader")?.classList.add("done");});
   },[]);
 
-  const LISTINGS=data?.listings||[];
-  const HISTORY=data?.history||[];
-  const meta=data?.metadata||{};
+  const LISTINGS=(data?.listings||[]).map(l=>({...l, images: l.images || (l.image_url ? [l.image_url] : [])}));
+  const HISTORY=(data?.history||[]).map(h=>({d:(h.d||h.date||"").slice(5,10), total:h.total||0, nw:h.nw||h["new"]||0}));
+  const meta=data?.metadata||{last_scan: data?.last_run};
   const sources=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.source))].sort()],[LISTINGS]);
   const editions=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.edition))]],[LISTINGS]);
 
