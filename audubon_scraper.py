@@ -47,7 +47,7 @@ def fetch_page(url, timeout=15):
         resp.raise_for_status()
         return resp
     except Exception as e:
-        print(f"  \u26a0 Error fetching {url}: {e}")
+        print(f"  [!] Error fetching {url}: {e}")
         return None
 
 
@@ -55,7 +55,7 @@ def fetch_page(url, timeout=15):
 
 def scrape_princeton_audubon():
     """Princeton Audubon Prints - Shopify store with JSON API."""
-    print("\ud83d\udd0d Scraping Princeton Audubon Prints...")
+    print("[*] Scraping Princeton Audubon Prints...")
     listings = []
     page = 1
     while True:
@@ -96,13 +96,13 @@ def scrape_princeton_audubon():
         page += 1
         if page > 10:
             break
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_panteek():
     """Panteek - Shopify store with JSON API."""
-    print("\ud83d\udd0d Scraping Panteek...")
+    print("[*] Scraping Panteek...")
     listings = []
     page = 1
     while True:
@@ -150,13 +150,13 @@ def scrape_panteek():
         page += 1
         if page > 20:
             break
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_old_print_shop():
     """The Old Print Shop - custom site, HTML scraping."""
-    print("\ud83d\udd0d Scraping The Old Print Shop...")
+    print("[*] Scraping The Old Print Shop...")
     listings = []
     base_url = "https://oldprintshop.com/shop"
     
@@ -252,13 +252,13 @@ def scrape_old_print_shop():
             deduped.append(l)
     listings = deduped
     
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_antique_audubon():
     """AntiqueAudubon.com - Weebly site, HTML scraping."""
-    print("\ud83d\udd0d Scraping Antique Audubon...")
+    print("[*] Scraping Antique Audubon...")
     listings = []
     
     # Scrape both first edition and later edition pages
@@ -326,13 +326,13 @@ def scrape_antique_audubon():
         
         time.sleep(0.5)
     
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_audubon_art():
     """AudubonArt.com - WooCommerce site."""
-    print("\ud83d\udd0d Scraping Audubon Art...")
+    print("[*] Scraping Audubon Art...")
     listings = []
     
     # Try to get product listings
@@ -386,19 +386,19 @@ def scrape_audubon_art():
         
         time.sleep(0.5)
     
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_1stdibs():
     """1stDibs - search results page."""
-    print("\ud83d\udd0d Scraping 1stDibs...")
+    print("[*] Scraping 1stDibs...")
     listings = []
     
     url = "https://www.1stdibs.com/search/?q=audubon+birds+of+america+print&sort=price-desc"
     resp = fetch_page(url)
     if not resp:
-        print("  \u26a0 1stDibs may require browser-based scraping (anti-bot)")
+        print("  [!] 1stDibs may require browser-based scraping (anti-bot)")
         return listings
     
     soup = BeautifulSoup(resp.text, "lxml")
@@ -451,13 +451,13 @@ def scrape_1stdibs():
                 "scraped_at": datetime.now(timezone.utc).isoformat(),
             })
     
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_ebay():
     """eBay - search results."""
-    print("\ud83d\udd0d Scraping eBay...")
+    print("[*] Scraping eBay...")
     listings = []
     
     queries = [
@@ -525,7 +525,7 @@ def scrape_ebay():
             deduped.append(l)
     listings = deduped
     
-    print(f"  \u2713 Found {len(listings)} listings")
+    print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
@@ -618,7 +618,7 @@ def save_listings(data):
 
 def run_scraper():
     print("=" * 60)
-    print(f"\ud83e\udd85 Audubon Print Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"[Audubon] Audubon Print Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print("=" * 60)
     
     previous = load_previous_listings()
@@ -642,7 +642,7 @@ def run_scraper():
             results = scraper_fn()
             all_listings.extend(results)
         except Exception as e:
-            print(f"  \u2718 {name} failed: {e}")
+            print(f"  [X] {name} failed: {e}")
             errors.append({"source": name, "error": str(e)})
         time.sleep(1)
     
@@ -693,13 +693,13 @@ def run_scraper():
     
     print("\
 " + "=" * 60)
-    print(f"\ud83d\udcca Results: {len(all_listings)} total listings, {new_count} new")
+    print(f"[Stats] Results: {len(all_listings)} total listings, {new_count} new")
     for src, stats in output["sources"].items():
         new_badge = f" ({stats['new']} new)" if stats["new"] else ""
         print(f"   {src}: {stats['count']}{new_badge}")
     if errors:
-        print(f"\u26a0  {len(errors)} source(s) had errors")
-    print(f"\ud83d\udcbe Saved to {DATA_DIR / 'listings.json'}")
+        print(f"[!]  {len(errors)} source(s) had errors")
+    print(f"[Saved] Saved to {DATA_DIR / 'listings.json'}")
     print("=" * 60)
     
     return output
