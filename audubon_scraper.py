@@ -844,11 +844,29 @@ def _extract_invaluable_lots(data, depth=0):
                 photos = iv.get("photos", [])
                 if photos and isinstance(photos, list) and isinstance(photos[0], dict):
                     p = photos[0]
-                    fname = (p.get("mediumFileName") or p.get("thumbnailFileName")
-                             or p.get("fileName") or p.get("largeFileName") or "")
-                    if fname:
-                        image_url = f"https://image.invaluable.com/housePhotos/{fname}"
-
+                    # Check _links inside photo for actual URLs
+                    p_links = p.get("_links", {})
+                    if isinstance(p_links, dict):
+                        for link_key in ["medium", "thumbnail", "large", "self"]:
+                            link_obj = p_links.get(link_key, {})
+                            if isinstance(link_obj, dict) and link_obj.get("href"):
+                                href = link_obj["href"]
+                                if not href.startswith("http"):
+                                    href = f"https://www.invaluable.com{href}"
+                                image_url = href
+                                break
+                    # Fallback: construct from filename
+                    if not image_url:
+                        fname = (p.get("mediumFileName") or p.get("thumbnailFileName")
+                                 or p.get("largeFileName") or "")
+                        if fname:
+                            # Extract house prefix (e.g. H5072 from H5072-L430532347_mid.jpg)
+                            house_match = re.match(r'([A-Za-z]+\d+)', fname)
+                            if house_match:
+                                house_id = house_match.group(1)
+                                image_url = f"https://image.invaluable.com/housePhotos/{house_id}/{fname}"
+                            else:
+                                image_url = f"https://image.invaluable.com/housePhotos/{fname}"
                 lots.append(make_listing(
                     "Invaluable", "invaluable", title, price, url,
                     image_url=image_url
@@ -1017,6 +1035,29 @@ def scrape_liveauctioneers():
                     lots = _extract_la_lots(data)
                     if lots:
                         print(f"  [OK] Extracted {len(lots)} lots from window.__data")
+                        # Build image map from actual <img> tags on page
+                        # LA item links look like /item/{itemId} with <img> inside
+                        img_map = {}
+                        for a_tag in soup.find_all("a", href=re.compile(r'/item/\d+')):
+                            m = re.search(r'/item/(\d+)', a_tag.get("href", ""))
+                            if m:
+                                iid = m.group(1)
+                                img = a_tag.find("img")
+                                if img:
+                                    real_src = (img.get("src") or img.get("data-src")
+                                                or img.get("srcset", "").split(",")[0].split(" ")[0] or "")
+                                    if real_src and real_src.startswith("http") and iid not in img_map:
+                                        img_map[iid] = real_src
+                        # Patch lots with real image URLs
+                        patched = 0
+                        for lot in lots:
+                            # Extract itemId from lot URL
+                            m = re.search(r'/item/(\d+)', lot.get("url", ""))
+                            if m and m.group(1) in img_map:
+                                lot["image_url"] = img_map[m.group(1)]
+                                patched += 1
+                        if patched:
+                            print(f"  [OK] Patched {patched} image URLs from page HTML")
                         results.extend(lots)
                 except (json.JSONDecodeError, ValueError) as e:
                     print(f"  [!] Failed to parse window.__data: {e}")
@@ -1243,6 +1284,11 @@ def run_scraper():
 
     previous = load_previous_listings()
     previous_ids = {l["id"] for l in previous.get("listings", [])}
+    # Build price map from previous scan for change detection
+    previous_prices = {}
+    for l in previous.get("listings", []):
+        if l.get("price") is not None:
+            previous_prices[l["id"]] = l["price"]
 
     all_listings = []
     errors = []
@@ -1269,8 +1315,9 @@ def run_scraper():
     # Cross-source deduplication
     all_listings = deduplicate_cross_source(all_listings)
 
-    # Mark new listings
+    # Mark new listings and detect price changes
     new_count = 0
+    price_changes = []
     for listing in all_listings:
         if listing["id"] not in previous_ids:
             listing["is_new"] = True
@@ -1278,10 +1325,53 @@ def run_scraper():
         else:
             listing["is_new"] = False
 
+        # Detect price changes (only for previously seen listings with prices)
+        lid = listing["id"]
+        cur_price = listing.get("price")
+        if lid in previous_prices and cur_price is not None:
+            old_price = previous_prices[lid]
+            if old_price != cur_price and old_price > 0:
+                diff = cur_price - old_price
+                pct = round((diff / old_price) * 100, 1)
+                listing["price_prev"] = old_price
+                listing["price_change"] = diff
+                listing["price_change_pct"] = pct
+                price_changes.append({
+                    "id": lid,
+                    "title": listing.get("title", ""),
+                    "source": listing.get("source", ""),
+                    "url": listing.get("url", ""),
+                    "image_url": listing.get("image_url", ""),
+                    "price": cur_price,
+                    "price_prev": old_price,
+                    "change": diff,
+                    "change_pct": pct,
+                })
+
+    if price_changes:
+        print(f"  [Price] {len(price_changes)} price change(s) detected")
+
     # Sort by price descending (None prices at end)
     all_listings.sort(key=lambda x: (x["price"] is None, -(x["price"] or 0)))
 
     now = datetime.now(timezone.utc).isoformat()
+
+    # Merge new price changes with historical ones (keep last 90 days)
+    all_price_changes = previous.get("price_changes", [])
+    if price_changes:
+        for pc in price_changes:
+            pc["detected"] = now
+        all_price_changes.extend(price_changes)
+    # Deduplicate: keep most recent change per listing ID
+    seen_changes = {}
+    for pc in all_price_changes:
+        seen_changes[pc["id"]] = pc
+    all_price_changes = sorted(seen_changes.values(),
+                               key=lambda x: abs(x.get("change_pct", 0)),
+                               reverse=True)
+    # Keep at most 100 recent changes
+    all_price_changes = all_price_changes[:100]
+
     output = {
         "listings": all_listings,
         "last_run": now,
@@ -1289,7 +1379,8 @@ def run_scraper():
         "new_count": new_count,
         "sources": {},
         "errors": errors,
-        "history": previous.get("history", [])
+        "history": previous.get("history", []),
+        "price_changes": all_price_changes,
     }
 
     for l in all_listings:
