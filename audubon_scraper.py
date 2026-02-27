@@ -10,19 +10,59 @@ import json
 import re
 import hashlib
 import time
+import random
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse, quote_plus
 
+# Optional: cloudscraper for Cloudflare-protected sites (pip install cloudscraper)
+try:
+    import cloudscraper
+    HAS_CLOUDSCRAPER = True
+except ImportError:
+    HAS_CLOUDSCRAPER = False
+
+# Optional: curl_cffi for TLS fingerprint impersonation (pip install curl_cffi)
+try:
+    from curl_cffi import requests as curl_requests
+    HAS_CURL_CFFI = True
+except ImportError:
+    HAS_CURL_CFFI = False
+
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
+# Rotate User-Agents to reduce fingerprinting
+_USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
+]
+
+def _random_ua():
+    return random.choice(_USER_AGENTS)
+
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    "User-Agent": _USER_AGENTS[0],
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Encoding": "gzip, deflate",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
 }
+
+# Shared cloudscraper session (created lazily)
+_cloudscraper_session = None
+
+def get_cloudscraper():
+    """Get or create a cloudscraper session for Cloudflare-protected sites."""
+    global _cloudscraper_session
+    if _cloudscraper_session is None and HAS_CLOUDSCRAPER:
+        _cloudscraper_session = cloudscraper.create_scraper(
+            browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True},
+        )
+    return _cloudscraper_session
 
 # Titles containing these (case-insensitive) are skipped
 TITLE_EXCLUDE = [
@@ -174,7 +214,11 @@ def scrape_princeton_audubon():
         resp = fetch_page(url)
         if not resp:
             break
-        data = resp.json()
+        try:
+            data = resp.json()
+        except Exception as e:
+            print(f"  [!] JSON parse error on page {page}: {e}")
+            break
         products = data.get("products", [])
         if not products:
             break
@@ -215,7 +259,11 @@ def scrape_panteek():
         resp = fetch_page(url)
         if not resp:
             break
-        data = resp.json()
+        try:
+            data = resp.json()
+        except Exception as e:
+            print(f"  [!] JSON parse error on page {page}: {e}")
+            break
         products = data.get("products", [])
         if not products:
             break
@@ -322,26 +370,13 @@ def scrape_old_print_shop():
             deduped.append(l)
     listings = deduped
 
-    # Fetch detail pages for high-res images
-    print(f"  [..] Fetching {len(listings)} detail pages for high-res images...")
-    for i, l in enumerate(listings):
-        hi_res = _get_detail_image(l["url"], [
-            "img.product-image", "img.main-image", ".product-detail img",
-            ".product-image-container img", "#product-image img",
-            "img[data-zoom]", ".gallery img", "figure img", ".product img"
-        ])
-        if hi_res:
-            l["image_url"] = hi_res
-        if (i + 1) % 10 == 0:
-            print(f"    {i + 1}/{len(listings)} detail pages fetched")
-        time.sleep(0.3)
-
+    # Use thumbnail images (skip detail page fetching for speed)
     print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_antique_audubon():
-    """AntiqueAudubon.com - Weebly site. Fetches detail pages for high-res images."""
+    """AntiqueAudubon.com - Weebly site. Uses thumbnail images."""
     print("[*] Scraping Antique Audubon...")
     listings = []
 
@@ -395,27 +430,15 @@ def scrape_antique_audubon():
 
         time.sleep(0.5)
 
-    # Fetch detail pages for high-res images
-    print(f"  [..] Fetching {len(listings)} detail pages for high-res images...")
-    for i, l in enumerate(listings):
-        hi_res = _get_detail_image(l["url"], [
-            ".wsite-com-product-images img", ".wsite-image img",
-            "img.wsite-com-product-image", ".product-large img",
-            "img[data-image-id]", ".wsite-image-border-none img",
-            "figure img"
-        ])
-        if hi_res:
-            l["image_url"] = hi_res
-        if (i + 1) % 10 == 0:
-            print(f"    {i + 1}/{len(listings)} detail pages fetched")
-        time.sleep(0.3)
-
+    # Use thumbnail images (skip detail page fetching for speed)
     print(f"  [OK] Found {len(listings)} listings")
     return listings
 
 
 def scrape_audubon_art():
-    """AudubonArt.com - WooCommerce site."""
+    """AudubonArt.com - WooCommerce site behind Cloudflare.
+    Strategy: cloudscraper > curl_cffi > session with cookies > plain requests.
+    """
     print("[*] Scraping Audubon Art...")
     listings = []
 
@@ -424,22 +447,81 @@ def scrape_audubon_art():
         "https://www.audubonart.com/product-category/audubon-1st-ed-octavo/",
     ]
 
-    woo_headers = {
-        **HEADERS,
-        "Referer": "https://www.audubonart.com/",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "same-origin",
-        "Sec-Ch-Ua": '"Chromium";v="131", "Google Chrome";v="131"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Cache-Control": "max-age=0",
-    }
+    # --- Strategy 1: cloudscraper (best for Cloudflare) ---
+    def _try_cloudscraper(url):
+        scraper = get_cloudscraper()
+        if not scraper:
+            return None
+        try:
+            resp = scraper.get(url, timeout=20)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            print(f"  [!] cloudscraper failed for {url}: {e}")
+            return None
+
+    # --- Strategy 2: curl_cffi (TLS fingerprint impersonation) ---
+    def _try_curl_cffi(url):
+        if not HAS_CURL_CFFI:
+            return None
+        try:
+            resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            print(f"  [!] curl_cffi failed for {url}: {e}")
+            return None
+
+    # --- Strategy 3: requests.Session with homepage warm-up ---
+    def _try_session(url):
+        try:
+            session = requests.Session()
+            session.headers.update({
+                "User-Agent": _random_ua(),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate",
+                "Connection": "keep-alive",
+                "Upgrade-Insecure-Requests": "1",
+                "Sec-Fetch-Dest": "document",
+                "Sec-Fetch-Mode": "navigate",
+                "Sec-Fetch-Site": "none",
+                "Sec-Fetch-User": "?1",
+                "Sec-Ch-Ua": '"Chromium";v="131", "Google Chrome";v="131"',
+                "Sec-Ch-Ua-Mobile": "?0",
+                "Sec-Ch-Ua-Platform": '"Windows"',
+                "Cache-Control": "max-age=0",
+            })
+            # Visit homepage first to get cookies
+            session.get("https://www.audubonart.com/", timeout=15)
+            time.sleep(1)
+            # Now fetch the category page with Referer set
+            session.headers["Referer"] = "https://www.audubonart.com/"
+            session.headers["Sec-Fetch-Site"] = "same-origin"
+            resp = session.get(url, timeout=20)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            print(f"  [!] Session approach failed for {url}: {e}")
+            return None
+
+    def _fetch_with_fallback(url):
+        """Try each strategy in order until one works."""
+        for strategy_name, strategy_fn in [
+            ("cloudscraper", _try_cloudscraper),
+            ("curl_cffi", _try_curl_cffi),
+            ("session", _try_session),
+        ]:
+            resp = strategy_fn(url)
+            if resp and resp.status_code == 200 and len(resp.text) > 1000:
+                return resp
+        print(f"  [!] All strategies failed for {url}")
+        return None
 
     for base_url in category_urls:
         for page_num in range(1, 6):
             url = base_url if page_num == 1 else f"{base_url}page/{page_num}/"
-            resp = fetch_page(url, headers=woo_headers)
+            resp = _fetch_with_fallback(url)
             if not resp:
                 if page_num == 1:
                     continue
@@ -475,7 +557,7 @@ def scrape_audubon_art():
                         image_url=image_url
                     ))
 
-            time.sleep(0.5)
+            time.sleep(1)
 
         if listings:
             break
@@ -485,73 +567,212 @@ def scrape_audubon_art():
 
 
 def scrape_invaluable():
-    """Invaluable.com - auction aggregator. Search for 'audubon octavo'."""
+    """Invaluable.com - auction aggregator with heavy bot protection.
+    Strategy: Try internal API first, then cloudscraper/curl_cffi for HTML.
+    """
     print("[*] Scraping Invaluable...")
     listings = []
 
-    search_headers = {
-        **HEADERS,
-        "Referer": "https://www.invaluable.com/",
-    }
-
-    search_urls = [
-        "https://www.invaluable.com/auction-lot/search?keyword=audubon+octavo&upcoming=true",
-        "https://www.invaluable.com/auction-lot/search?keyword=audubon+octavo&sortBy=itemStartDateDesc",
+    # --- Strategy 1: Internal search API (JSON) ---
+    # Invaluable's frontend calls internal API endpoints for search results
+    api_urls = [
+        "https://www.invaluable.com/api/search?keyword=audubon+octavo&upcoming=true&limit=96",
+        "https://www.invaluable.com/api/auction-lot/search?keyword=audubon+octavo&upcoming=true&limit=96",
     ]
 
-    for url in search_urls:
-        resp = fetch_page(url, headers=search_headers, timeout=20)
-        if not resp:
-            continue
+    api_headers = {
+        "User-Agent": _random_ua(),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://www.invaluable.com/auction-lot/search?keyword=audubon+octavo",
+        "X-Requested-With": "XMLHttpRequest",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
+        "Connection": "keep-alive",
+    }
 
-        soup = BeautifulSoup(resp.text, "lxml")
-
-        # Look for JSON data in script tags
-        for script in soup.find_all("script"):
-            text = script.string or ""
-            if "audubon" in text.lower() and ("lot" in text.lower() or "price" in text.lower()):
-                for pattern in [r'__NEXT_DATA__\s*=\s*({.*?})\s*;',
-                                r'window\.__data\s*=\s*({.*?})\s*;',
-                                r'"lots"\s*:\s*(\[.*?\])',
-                                r'"results"\s*:\s*(\[.*?\])']:
-                    match = re.search(pattern, text, re.DOTALL)
-                    if match:
+    def _try_api():
+        results = []
+        # Try curl_cffi first (best TLS fingerprinting)
+        for api_url in api_urls:
+            if HAS_CURL_CFFI:
+                try:
+                    resp = curl_requests.get(
+                        api_url, headers=api_headers,
+                        impersonate="chrome131", timeout=20
+                    )
+                    print(f"  [debug] curl_cffi API → {resp.status_code} ({len(resp.text)} chars)")
+                    if resp.status_code == 200:
                         try:
-                            data = json.loads(match.group(1))
+                            data = resp.json()
                             lots = _extract_invaluable_lots(data)
-                            listings.extend(lots)
-                        except json.JSONDecodeError:
+                            if lots:
+                                print(f"  [OK] Invaluable API returned {len(lots)} lots via curl_cffi")
+                                return lots
+                            else:
+                                print(f"  [debug] API returned JSON but 0 lots extracted")
+                        except (json.JSONDecodeError, ValueError) as e:
+                            print(f"  [debug] API response not JSON: {str(e)[:80]}")
+                            print(f"  [debug] First 200 chars: {resp.text[:200]}")
+                except Exception as e:
+                    print(f"  [!] curl_cffi API attempt failed: {e}")
+
+            # Try cloudscraper
+            scraper = get_cloudscraper()
+            if scraper:
+                try:
+                    resp = scraper.get(api_url, headers=api_headers, timeout=20)
+                    print(f"  [debug] cloudscraper API → {resp.status_code} ({len(resp.text)} chars)")
+                    if resp.status_code == 200:
+                        try:
+                            data = resp.json()
+                            lots = _extract_invaluable_lots(data)
+                            if lots:
+                                print(f"  [OK] Invaluable API returned {len(lots)} lots via cloudscraper")
+                                return lots
+                        except (json.JSONDecodeError, ValueError):
                             pass
+                except Exception as e:
+                    print(f"  [!] cloudscraper API attempt failed: {e}")
+        return results
 
-        # HTML fallback
-        lot_cards = soup.select("[class*='lot-card'], [class*='LotCard'], .search-result-item, [data-lot-id]")
-        for card in lot_cards:
-            link = card.find("a", href=True)
-            if not link:
+    # --- Strategy 2: Full page scrape with bot bypass ---
+    def _try_page_scrape():
+        results = []
+        search_urls = [
+            "https://www.invaluable.com/auction-lot/search?keyword=audubon+octavo&upcoming=true",
+            "https://www.invaluable.com/auction-lot/search?keyword=audubon+octavo&sortBy=itemStartDateDesc",
+        ]
+
+        for url in search_urls:
+            resp = None
+
+            # Try curl_cffi
+            if HAS_CURL_CFFI:
+                try:
+                    resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
+                    print(f"  [debug] curl_cffi page → {resp.status_code} ({len(resp.text)} chars)")
+                    if resp.status_code != 200:
+                        resp = None
+                except Exception as e:
+                    print(f"  [debug] curl_cffi page failed: {e}")
+                    resp = None
+
+            # Try cloudscraper
+            if not resp:
+                scraper = get_cloudscraper()
+                if scraper:
+                    try:
+                        resp = scraper.get(url, timeout=20)
+                        print(f"  [debug] cloudscraper page → {resp.status_code} ({len(resp.text)} chars)")
+                        if resp.status_code != 200:
+                            resp = None
+                    except Exception as e:
+                        print(f"  [debug] cloudscraper page failed: {e}")
+                        resp = None
+
+            # Try session with warm-up
+            if not resp:
+                try:
+                    session = requests.Session()
+                    session.headers.update({
+                        "User-Agent": _random_ua(),
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        "Accept-Language": "en-US,en;q=0.9",
+                        "Accept-Encoding": "gzip, deflate",
+                        "Sec-Fetch-Dest": "document",
+                        "Sec-Fetch-Mode": "navigate",
+                        "Sec-Fetch-Site": "none",
+                        "Sec-Fetch-User": "?1",
+                    })
+                    # Warm up with homepage
+                    home_resp = session.get("https://www.invaluable.com/", timeout=15)
+                    print(f"  [debug] session homepage → {home_resp.status_code}")
+                    time.sleep(1.5)
+                    session.headers["Referer"] = "https://www.invaluable.com/"
+                    session.headers["Sec-Fetch-Site"] = "same-origin"
+                    resp = session.get(url, timeout=20)
+                    print(f"  [debug] session page → {resp.status_code} ({len(resp.text)} chars)")
+                    if resp.status_code != 200:
+                        resp = None
+                except Exception as e:
+                    print(f"  [!] Session approach failed: {e}")
+                    resp = None
+
+            if not resp:
+                print(f"  [!] All strategies failed for {url}")
                 continue
-            lot_url = urljoin("https://www.invaluable.com", link.get("href", ""))
-            title_el = card.find("h3") or card.find("h2") or card.find(class_=re.compile(r'title|name'))
-            title = title_el.get_text(strip=True) if title_el else link.get_text(strip=True)
 
-            if not title or is_excluded(title):
-                continue
-            if "audubon" not in title.lower():
-                continue
+            soup = BeautifulSoup(resp.text, "lxml")
 
-            price_el = card.find(class_=re.compile(r'price|estimate'))
-            price = safe_price(price_el.get_text(strip=True)) if price_el else None
+            # Look for __NEXT_DATA__ (Next.js server-rendered data)
+            next_data_script = soup.find("script", id="__NEXT_DATA__")
+            if next_data_script and next_data_script.string:
+                try:
+                    data = json.loads(next_data_script.string)
+                    lots = _extract_invaluable_lots(data)
+                    if lots:
+                        results.extend(lots)
+                        break
+                except json.JSONDecodeError:
+                    pass
 
-            img = card.find("img")
-            image_url = img.get("src", "") or img.get("data-src", "") if img else None
+            # Fallback: search all script tags for JSON data
+            for script in soup.find_all("script"):
+                text = script.string or ""
+                if "audubon" in text.lower() and ("lot" in text.lower() or "price" in text.lower()):
+                    for pattern in [r'__NEXT_DATA__\s*=\s*({.*?})\s*;',
+                                    r'window\.__data\s*=\s*({.*?})\s*;',
+                                    r'"lots"\s*:\s*(\[.*?\])',
+                                    r'"results"\s*:\s*(\[.*?\])']:
+                        match = re.search(pattern, text, re.DOTALL)
+                        if match:
+                            try:
+                                data = json.loads(match.group(1))
+                                lots = _extract_invaluable_lots(data)
+                                results.extend(lots)
+                            except json.JSONDecodeError:
+                                pass
 
-            listings.append(make_listing(
-                "Invaluable", "invaluable", title, price, lot_url,
-                image_url=image_url
-            ))
+            # HTML fallback
+            if not results:
+                lot_cards = soup.select("[class*='lot-card'], [class*='LotCard'], .search-result-item, [data-lot-id]")
+                for card in lot_cards:
+                    link = card.find("a", href=True)
+                    if not link:
+                        continue
+                    lot_url = urljoin("https://www.invaluable.com", link.get("href", ""))
+                    title_el = card.find("h3") or card.find("h2") or card.find(class_=re.compile(r'title|name'))
+                    title = title_el.get_text(strip=True) if title_el else link.get_text(strip=True)
 
-        if listings:
-            break
-        time.sleep(1)
+                    if not title or is_excluded(title):
+                        continue
+                    if "audubon" not in title.lower():
+                        continue
+
+                    price_el = card.find(class_=re.compile(r'price|estimate'))
+                    price = safe_price(price_el.get_text(strip=True)) if price_el else None
+
+                    img = card.find("img")
+                    image_url = img.get("src", "") or img.get("data-src", "") if img else None
+
+                    results.append(make_listing(
+                        "Invaluable", "invaluable", title, price, lot_url,
+                        image_url=image_url
+                    ))
+
+            if results:
+                break
+            time.sleep(1)
+
+        return results
+
+    # Execute strategies
+    listings = _try_api()
+    if not listings:
+        listings = _try_page_scrape()
 
     # Dedupe
     seen = set()
@@ -566,10 +787,54 @@ def scrape_invaluable():
 
 
 def _extract_invaluable_lots(data, depth=0):
+    """Extract lots from Invaluable API response.
+    Primary structure: data.itemViewList[].itemView with nested lot details.
+    """
     if depth > 6:
         return []
     lots = []
+
     if isinstance(data, dict):
+        # Primary: itemViewList array (the actual API response format)
+        if "itemViewList" in data and isinstance(data["itemViewList"], list):
+            for item_wrapper in data["itemViewList"]:
+                iv = item_wrapper.get("itemView", {}) if isinstance(item_wrapper, dict) else {}
+                if not iv:
+                    continue
+                title = iv.get("title", "")
+                if not title or "audubon" not in title.lower() or is_excluded(title):
+                    continue
+
+                # Build URL from _links or itemView fields
+                url = ""
+                links = item_wrapper.get("_links", {})
+                if isinstance(links, dict) and "self" in links:
+                    url = links["self"].get("href", "")
+                if not url:
+                    url = iv.get("url", iv.get("lotUrl", ""))
+                    ref = iv.get("ref", "")
+                    if not url and ref:
+                        url = f"https://www.invaluable.com/auction-lot/{ref}"
+                if url and not url.startswith("http"):
+                    url = f"https://www.invaluable.com{url}"
+
+                # Price from various possible fields
+                price = safe_price(str(
+                    iv.get("priceResult", iv.get("estimateLow",
+                    iv.get("currentBid", iv.get("price", ""))))
+                ))
+
+                # Image
+                image_url = iv.get("photoUrl", iv.get("photo",
+                    iv.get("imageUrl", iv.get("image", ""))))
+
+                lots.append(make_listing(
+                    "Invaluable", "invaluable", title, price, url,
+                    image_url=image_url
+                ))
+            return lots
+
+        # Fallback: older format with lotTitle
         if "lotTitle" in data or ("title" in data and "saleTitle" in data):
             title = data.get("lotTitle", data.get("title", ""))
             if "audubon" in title.lower() and not is_excluded(title):
@@ -582,8 +847,11 @@ def _extract_invaluable_lots(data, depth=0):
                     url,
                     image_url=data.get("photoUrl", data.get("image", "")),
                 ))
+
+        # Recurse into nested dicts
         for v in data.values():
             lots.extend(_extract_invaluable_lots(v, depth + 1))
+
     elif isinstance(data, list):
         for item in data:
             lots.extend(_extract_invaluable_lots(item, depth + 1))
@@ -591,66 +859,231 @@ def _extract_invaluable_lots(data, depth=0):
 
 
 def scrape_liveauctioneers():
-    """LiveAuctioneers.com - auction aggregator. Search for 'audubon octavo'."""
+    """LiveAuctioneers.com - React SPA with heavy bot protection.
+    Strategy: Try internal search API first, then page scrape with bypass.
+    """
     print("[*] Scraping LiveAuctioneers...")
     listings = []
 
-    search_headers = {
-        **HEADERS,
-        "Referer": "https://www.liveauctioneers.com/",
+    # --- Strategy 1: Internal search API ---
+    # LiveAuctioneers uses internal API endpoints for search
+    api_urls = [
+        "https://www.liveauctioneers.com/api/v1/search?keyword=audubon+octavo&sort=-relevance&status=online&limit=96",
+        "https://www.liveauctioneers.com/api/search?keyword=audubon+octavo&sort=-relevance&limit=96",
+    ]
+
+    api_headers = {
+        "User-Agent": _random_ua(),
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://www.liveauctioneers.com/search/?keyword=audubon+octavo",
+        "X-Requested-With": "XMLHttpRequest",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-origin",
     }
 
-    url = "https://www.liveauctioneers.com/search/?keyword=audubon+octavo"
-    resp = fetch_page(url, headers=search_headers, timeout=20)
-    if not resp:
-        print("  [!] LiveAuctioneers may require browser-based access")
-        return listings
+    def _try_api():
+        for api_url in api_urls:
+            # Try curl_cffi
+            if HAS_CURL_CFFI:
+                try:
+                    resp = curl_requests.get(
+                        api_url, headers=api_headers,
+                        impersonate="chrome131", timeout=20
+                    )
+                    if resp.status_code == 200:
+                        try:
+                            data = resp.json()
+                            lots = _extract_la_lots(data)
+                            if lots:
+                                print(f"  [OK] LA API returned {len(lots)} lots via curl_cffi")
+                                return lots
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+                except Exception as e:
+                    print(f"  [!] curl_cffi LA API failed: {e}")
 
-    soup = BeautifulSoup(resp.text, "lxml")
+            # Try cloudscraper
+            scraper = get_cloudscraper()
+            if scraper:
+                try:
+                    resp = scraper.get(api_url, headers=api_headers, timeout=20)
+                    if resp.status_code == 200:
+                        try:
+                            data = resp.json()
+                            lots = _extract_la_lots(data)
+                            if lots:
+                                print(f"  [OK] LA API returned {len(lots)} lots via cloudscraper")
+                                return lots
+                        except (json.JSONDecodeError, ValueError):
+                            pass
+                except Exception:
+                    pass
+        return []
 
-    # Check for JSON data in script tags
-    for script in soup.find_all("script"):
-        text = script.string or ""
-        if "audubon" in text.lower() and ("item" in text.lower() or "lot" in text.lower()):
-            for pattern in [r'__NEXT_DATA__\s*=\s*({.*?})\s*</script',
-                            r'window\.__PRELOADED_STATE__\s*=\s*({.*?})\s*;',
-                            r'"items"\s*:\s*(\[.*?\])',
-                            r'"lots"\s*:\s*(\[.*?\])']:
-                match = re.search(pattern, text, re.DOTALL)
-                if match:
-                    try:
-                        data = json.loads(match.group(1))
-                        lots = _extract_la_lots(data)
-                        listings.extend(lots)
-                    except json.JSONDecodeError:
-                        pass
+    # --- Strategy 2: Page scrape with bot bypass ---
+    def _try_page_scrape():
+        url = "https://www.liveauctioneers.com/search/?keyword=audubon+octavo"
+        resp = None
 
-    # HTML fallback
+        # Try curl_cffi
+        if HAS_CURL_CFFI:
+            try:
+                resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
+                if resp.status_code != 200:
+                    print(f"  [!] curl_cffi returned {resp.status_code}")
+                    resp = None
+            except Exception as e:
+                print(f"  [!] curl_cffi page scrape failed: {e}")
+
+        # Try cloudscraper
+        if not resp:
+            scraper = get_cloudscraper()
+            if scraper:
+                try:
+                    resp = scraper.get(url, timeout=20)
+                    if resp.status_code != 200:
+                        resp = None
+                except Exception as e:
+                    print(f"  [!] cloudscraper page scrape failed: {e}")
+
+        # Try session
+        if not resp:
+            try:
+                session = requests.Session()
+                session.headers.update({
+                    "User-Agent": _random_ua(),
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                })
+                session.get("https://www.liveauctioneers.com/", timeout=15)
+                time.sleep(1.5)
+                session.headers["Referer"] = "https://www.liveauctioneers.com/"
+                session.headers["Sec-Fetch-Site"] = "same-origin"
+                resp = session.get(url, timeout=20)
+                if resp.status_code != 200:
+                    resp = None
+            except Exception as e:
+                print(f"  [!] Session approach failed: {e}")
+
+        if not resp:
+            print("  [!] All page scrape strategies failed for LiveAuctioneers")
+            return []
+
+        results = []
+        soup = BeautifulSoup(resp.text, "lxml")
+
+        # Strategy A: Parse window.__data (LiveAuctioneers' primary data store)
+        for script in soup.find_all("script"):
+            text = script.string or ""
+            if text.startswith("window.__data="):
+                try:
+                    json_str = text[len("window.__data="):]
+                    # Replace JS undefined/NaN with null for valid JSON
+                    json_str = re.sub(r'\bundefined\b', 'null', json_str)
+                    json_str = re.sub(r'\bNaN\b', 'null', json_str)
+                    # Use raw_decode to stop at end of first JSON object
+                    # (there may be trailing JS statements after the object)
+                    decoder = json.JSONDecoder()
+                    data, _ = decoder.raw_decode(json_str)
+                    print(f"  [debug] Parsed window.__data successfully")
+                    lots = _extract_la_lots(data)
+                    if lots:
+                        print(f"  [OK] Extracted {len(lots)} lots from window.__data")
+                        results.extend(lots)
+                except (json.JSONDecodeError, ValueError) as e:
+                    print(f"  [!] Failed to parse window.__data: {e}")
+                break
+
+        # Strategy B: Check for __NEXT_DATA__
+        if not results:
+            next_data = soup.find("script", id="__NEXT_DATA__")
+            if next_data and next_data.string:
+                try:
+                    data = json.loads(next_data.string)
+                    lots = _extract_la_lots(data)
+                    results.extend(lots)
+                except json.JSONDecodeError:
+                    pass
+
+        # Strategy C: Regex fallback for other JSON patterns
+        if not results:
+            for script in soup.find_all("script"):
+                text = script.string or ""
+                if "audubon" in text.lower() and ("item" in text.lower() or "lot" in text.lower()):
+                    for pattern in [r'window\.__data\s*=\s*({.*})\s*;?\s*$',
+                                    r'window\.__PRELOADED_STATE__\s*=\s*({.*?})\s*;',
+                                    r'"items"\s*:\s*(\[.*?\])',
+                                    r'"lots"\s*:\s*(\[.*?\])']:
+                        match = re.search(pattern, text, re.DOTALL)
+                        if match:
+                            try:
+                                raw = re.sub(r'\bundefined\b', 'null', match.group(1))
+                                data = json.loads(raw)
+                                lots = _extract_la_lots(data)
+                                results.extend(lots)
+                            except json.JSONDecodeError:
+                                pass
+
+        # Strategy D: HTML fallback (Tailwind class patterns)
+        if not results:
+            # Find links to /item/ pages
+            item_links = soup.find_all("a", href=re.compile(r'/item/\d+'))
+            seen_urls = set()
+            for link in item_links:
+                href = link.get("href", "")
+                lot_url = urljoin("https://www.liveauctioneers.com", href)
+                if lot_url in seen_urls:
+                    continue
+                seen_urls.add(lot_url)
+
+                # Walk up to find container with title and price
+                container = link
+                for _ in range(5):
+                    if container.parent:
+                        container = container.parent
+
+                title = ""
+                # Look for title text in the link or nearby elements
+                title_el = (link.find("h3") or link.find("h2") or
+                           link.find(class_=re.compile(r'title')) or
+                           container.find("h3") or container.find("h2"))
+                if title_el:
+                    title = title_el.get_text(strip=True)
+                elif link.get_text(strip=True):
+                    title = link.get_text(strip=True)
+
+                if not title or is_excluded(title):
+                    continue
+                if "audubon" not in title.lower():
+                    continue
+
+                price = None
+                price_el = container.find(string=re.compile(r'\$[\d,]+'))
+                if price_el:
+                    price = safe_price(price_el)
+
+                img = container.find("img")
+                image_url = img.get("src", "") or img.get("data-src", "") if img else None
+
+                results.append(make_listing(
+                    "LiveAuctioneers", "liveauctioneers", title, price, lot_url,
+                    image_url=image_url
+                ))
+
+        return results
+
+    # Execute strategies
+    listings = _try_api()
     if not listings:
-        items = soup.select("[class*='item-card'], [class*='ItemCard'], .search-item, [data-item-id]")
-        for item in items:
-            link = item.find("a", href=True)
-            if not link:
-                continue
-            lot_url = urljoin("https://www.liveauctioneers.com", link.get("href", ""))
-            title_el = item.find("h3") or item.find("h2") or item.find(class_=re.compile(r'title'))
-            title = title_el.get_text(strip=True) if title_el else link.get_text(strip=True)
-
-            if not title or is_excluded(title):
-                continue
-            if "audubon" not in title.lower():
-                continue
-
-            price_el = item.find(class_=re.compile(r'price|estimate'))
-            price = safe_price(price_el.get_text(strip=True)) if price_el else None
-
-            img = item.find("img")
-            image_url = img.get("src", "") or img.get("data-src", "") if img else None
-
-            listings.append(make_listing(
-                "LiveAuctioneers", "liveauctioneers", title, price, lot_url,
-                image_url=image_url
-            ))
+        listings = _try_page_scrape()
 
     # Dedupe
     seen = set()
@@ -760,6 +1193,22 @@ def run_scraper():
     print("=" * 60)
     print(f"[Audubon] Audubon Print Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print("=" * 60)
+
+    # Report available bypass libraries
+    bypass_status = []
+    if HAS_CLOUDSCRAPER:
+        bypass_status.append("cloudscraper ✓")
+    else:
+        bypass_status.append("cloudscraper ✗ (pip install cloudscraper)")
+    if HAS_CURL_CFFI:
+        bypass_status.append("curl_cffi ✓")
+    else:
+        bypass_status.append("curl_cffi ✗ (pip install curl_cffi)")
+    print(f"[Deps] {' | '.join(bypass_status)}")
+    if not HAS_CLOUDSCRAPER and not HAS_CURL_CFFI:
+        print("[!] No bypass libraries installed - protected sites will likely fail")
+        print("    Install with: pip install cloudscraper curl_cffi")
+    print()
 
     previous = load_previous_listings()
     previous_ids = {l["id"] for l in previous.get("listings", [])}
