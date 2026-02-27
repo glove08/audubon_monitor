@@ -70,6 +70,7 @@ TITLE_EXCLUDE = [
     "lear's",
     "john gould",
     "quadruped",
+    "oppenheimer",
 ]
 
 def is_excluded(title, body=""):
@@ -444,7 +445,8 @@ def scrape_audubon_art():
 
     category_urls = [
         "https://www.audubonart.com/product-category/john-james-audubon/birds-of-america/1st-edition-octavos-antique-originals/",
-        "https://www.audubonart.com/product-category/audubon-1st-ed-octavo/",
+        "https://www.audubonart.com/product-category/john-james-audubon/birds-of-america/",
+        "https://www.audubonart.com/product-category/john-james-audubon/",
     ]
 
     # --- Strategy 1: cloudscraper (best for Cloudflare) ---
@@ -546,10 +548,30 @@ def scrape_audubon_art():
                     continue
 
                 price_el = prod.find(class_=re.compile(r'price'))
-                price = safe_price(price_el.get_text(strip=True)) if price_el else None
+                price = None
+                if price_el:
+                    # WooCommerce: sale price in <ins>, regular in <del> or <bdi>
+                    sale_el = price_el.find("ins")
+                    if sale_el:
+                        price = safe_price(sale_el.get_text(strip=True))
+                    if not price:
+                        # Get the last price amount (usually the current/sale price)
+                        amounts = price_el.find_all(class_=re.compile(r'amount'))
+                        if amounts:
+                            price = safe_price(amounts[-1].get_text(strip=True))
+                    if not price:
+                        price = safe_price(price_el.get_text(strip=True))
 
                 img = prod.find("img")
-                image_url = img.get("src", "") if img else None
+                image_url = None
+                if img:
+                    # WooCommerce lazy-load: real URL in data-src or data-lazy-src
+                    image_url = (img.get("data-src") or img.get("data-lazy-src")
+                                 or img.get("data-original") or img.get("srcset", "").split(",")[0].split(" ")[0]
+                                 or img.get("src", ""))
+                    # Skip SVG placeholders
+                    if image_url and image_url.startswith("data:"):
+                        image_url = None
 
                 if title and product_url:
                     listings.append(make_listing(
@@ -559,8 +581,14 @@ def scrape_audubon_art():
 
             time.sleep(1)
 
-        if listings:
-            break
+    # Dedupe across overlapping categories
+    seen = set()
+    deduped = []
+    for l in listings:
+        if l["url"] not in seen:
+            seen.add(l["url"])
+            deduped.append(l)
+    listings = deduped
 
     print(f"  [OK] Found {len(listings)} listings")
     return listings
@@ -603,7 +631,6 @@ def scrape_invaluable():
                         api_url, headers=api_headers,
                         impersonate="chrome131", timeout=20
                     )
-                    print(f"  [debug] curl_cffi API → {resp.status_code} ({len(resp.text)} chars)")
                     if resp.status_code == 200:
                         try:
                             data = resp.json()
@@ -611,11 +638,8 @@ def scrape_invaluable():
                             if lots:
                                 print(f"  [OK] Invaluable API returned {len(lots)} lots via curl_cffi")
                                 return lots
-                            else:
-                                print(f"  [debug] API returned JSON but 0 lots extracted")
-                        except (json.JSONDecodeError, ValueError) as e:
-                            print(f"  [debug] API response not JSON: {str(e)[:80]}")
-                            print(f"  [debug] First 200 chars: {resp.text[:200]}")
+                        except (json.JSONDecodeError, ValueError):
+                            pass
                 except Exception as e:
                     print(f"  [!] curl_cffi API attempt failed: {e}")
 
@@ -624,7 +648,6 @@ def scrape_invaluable():
             if scraper:
                 try:
                     resp = scraper.get(api_url, headers=api_headers, timeout=20)
-                    print(f"  [debug] cloudscraper API → {resp.status_code} ({len(resp.text)} chars)")
                     if resp.status_code == 200:
                         try:
                             data = resp.json()
@@ -653,11 +676,9 @@ def scrape_invaluable():
             if HAS_CURL_CFFI:
                 try:
                     resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
-                    print(f"  [debug] curl_cffi page → {resp.status_code} ({len(resp.text)} chars)")
                     if resp.status_code != 200:
                         resp = None
                 except Exception as e:
-                    print(f"  [debug] curl_cffi page failed: {e}")
                     resp = None
 
             # Try cloudscraper
@@ -666,11 +687,9 @@ def scrape_invaluable():
                 if scraper:
                     try:
                         resp = scraper.get(url, timeout=20)
-                        print(f"  [debug] cloudscraper page → {resp.status_code} ({len(resp.text)} chars)")
                         if resp.status_code != 200:
                             resp = None
                     except Exception as e:
-                        print(f"  [debug] cloudscraper page failed: {e}")
                         resp = None
 
             # Try session with warm-up
@@ -689,12 +708,10 @@ def scrape_invaluable():
                     })
                     # Warm up with homepage
                     home_resp = session.get("https://www.invaluable.com/", timeout=15)
-                    print(f"  [debug] session homepage → {home_resp.status_code}")
                     time.sleep(1.5)
                     session.headers["Referer"] = "https://www.invaluable.com/"
                     session.headers["Sec-Fetch-Site"] = "same-origin"
                     resp = session.get(url, timeout=20)
-                    print(f"  [debug] session page → {resp.status_code} ({len(resp.text)} chars)")
                     if resp.status_code != 200:
                         resp = None
                 except Exception as e:
@@ -805,28 +822,32 @@ def _extract_invaluable_lots(data, depth=0):
                 if not title or "audubon" not in title.lower() or is_excluded(title):
                     continue
 
-                # Build URL from _links or itemView fields
-                url = ""
-                links = item_wrapper.get("_links", {})
-                if isinstance(links, dict) and "self" in links:
-                    url = links["self"].get("href", "")
-                if not url:
+                # Build URL from ref (always use invaluable.com, not auctionzip)
+                ref = iv.get("ref", "")
+                slug = iv.get("slug", "")
+                if slug:
+                    url = f"https://www.invaluable.com/auction-lot/{slug}-{ref}"
+                elif ref:
+                    url = f"https://www.invaluable.com/auction-lot/{ref}"
+                else:
                     url = iv.get("url", iv.get("lotUrl", ""))
-                    ref = iv.get("ref", "")
-                    if not url and ref:
-                        url = f"https://www.invaluable.com/auction-lot/{ref}"
-                if url and not url.startswith("http"):
-                    url = f"https://www.invaluable.com{url}"
+                    if url and not url.startswith("http"):
+                        url = f"https://www.invaluable.com{url}"
 
-                # Price from various possible fields
-                price = safe_price(str(
-                    iv.get("priceResult", iv.get("estimateLow",
-                    iv.get("currentBid", iv.get("price", ""))))
-                ))
+                # Price: priceResult (hammer) > estimateLow > price (starting)
+                # Use or-chain so 0/0.0 (unsold) falls through
+                price_val = iv.get("priceResult") or iv.get("estimateLow") or iv.get("price") or ""
+                price = safe_price(str(price_val))
 
-                # Image
-                image_url = iv.get("photoUrl", iv.get("photo",
-                    iv.get("imageUrl", iv.get("image", ""))))
+                # Image from photos array
+                image_url = None
+                photos = iv.get("photos", [])
+                if photos and isinstance(photos, list) and isinstance(photos[0], dict):
+                    p = photos[0]
+                    fname = (p.get("mediumFileName") or p.get("thumbnailFileName")
+                             or p.get("fileName") or p.get("largeFileName") or "")
+                    if fname:
+                        image_url = f"https://image.invaluable.com/housePhotos/{fname}"
 
                 lots.append(make_listing(
                     "Invaluable", "invaluable", title, price, url,
@@ -993,7 +1014,6 @@ def scrape_liveauctioneers():
                     # (there may be trailing JS statements after the object)
                     decoder = json.JSONDecoder()
                     data, _ = decoder.raw_decode(json_str)
-                    print(f"  [debug] Parsed window.__data successfully")
                     lots = _extract_la_lots(data)
                     if lots:
                         print(f"  [OK] Extracted {len(lots)} lots from window.__data")
@@ -1109,11 +1129,22 @@ def _extract_la_lots(data, depth=0):
                 url = data.get("url", f"https://www.liveauctioneers.com/item/{item_id}")
                 if url and not url.startswith("http"):
                     url = f"https://www.liveauctioneers.com{url}"
+
+                # Price: salePrice (sold) > leadingBid (current) > startPrice > estimate
+                price_val = (data.get("salePrice") or data.get("leadingBid")
+                             or data.get("startPrice") or data.get("lowBidEstimate")
+                             or data.get("currentBid") or "")
+                price = safe_price(str(price_val)) if price_val else None
+
+                # Construct image URL from itemId + catalogId
+                image_url = None
+                catalog_id = data.get("catalogId", data.get("saleId", ""))
+                if item_id and catalog_id:
+                    image_url = f"https://p1.liveauctioneers.com/{catalog_id}/{item_id}_1_lg.jpg"
+
                 lots.append(make_listing(
-                    "LiveAuctioneers", "liveauctioneers", title,
-                    safe_price(str(data.get("currentBid", data.get("estimate", data.get("price", ""))))),
-                    url,
-                    image_url=data.get("imageUrl", data.get("image", data.get("photo", ""))),
+                    "LiveAuctioneers", "liveauctioneers", title, price, url,
+                    image_url=image_url,
                 ))
         for v in data.values():
             lots.extend(_extract_la_lots(v, depth + 1))
