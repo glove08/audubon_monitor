@@ -1,0 +1,235 @@
+{
+  "metadata": {
+    "last_scan": "2026-02-26T10:00:00",
+    "next_scan": "2026-02-27T10:00:00",
+    "total_sources": 7,
+    "version": "1.0"
+  },
+  "history": [
+    {"d":"Feb 20","total":22,"nw":0},
+    {"d":"Feb 21","total":23,"nw":1},
+    {"d":"Feb 22","total":24,"nw":2},
+    {"d":"Feb 23","total":25,"nw":3},
+    {"d":"Feb 24","total":27,"nw":5},
+    {"d":"Feb 25","total":28,"nw":3},
+    {"d":"Feb 26","total":30,"nw":16}
+  ],
+  "listings": [
+    {
+      "id":"ops001","source":"The Old Print Shop",
+      "title":"The Birds of America — Complete Octavo Set (500 Plates)",
+      "price":115000,"edition":"Havell","plate":null,
+      "desc":"Complete set of the royal octavo edition, first edition. All 500 plates present and in fine condition.",
+      "url":"https://oldprintshop.com/product/171220","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Audubon-wild-turkey.jpg/800px-Audubon-wild-turkey.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg/800px-John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg","https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Audubon_carolina_pigeon.jpg/800px-Audubon_carolina_pigeon.jpg"]
+    },
+    {
+      "id":"1d002","source":"1stDibs",
+      "title":"Havell Edition — American White Pelican, Pl. 311",
+      "price":38500,"edition":"Havell","plate":311,
+      "desc":"Hand-colored copper plate engraving. Double elephant folio. Gallery provenance.",
+      "url":"https://www.1stdibs.com/","is_new":false,"date":"2026-02-22",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/American_White_Pelican_by_Audubon.jpg/800px-American_White_Pelican_by_Audubon.jpg"]
+    },
+    {
+      "id":"1d003","source":"1stDibs",
+      "title":"Bien Edition — Snowy Owl, Pl. 28",
+      "price":15000,"edition":"Bien","plate":28,
+      "desc":"Chromolithograph. Excellent condition. Professional conservation framing.",
+      "url":"https://www.1stdibs.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg/800px-John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg"]
+    },
+    {
+      "id":"eb004","source":"eBay",
+      "title":"Bien Edition — American Flamingo Chromolithograph c.1860",
+      "price":12500,"edition":"Bien","plate":431,
+      "desc":"Large format chromolithograph. Rare Bien edition.",
+      "url":"https://www.ebay.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Audubon%28Flamingo%29.jpg/494px-Audubon%28Flamingo%29.jpg"]
+    },
+    {
+      "id":"eb002","source":"eBay",
+      "title":"Havell Edition — Raven, Pl. 101 — Original Hand Colored",
+      "price":8500,"edition":"Havell","plate":101,
+      "desc":"Original hand-colored copper plate engraving. Double elephant folio size.",
+      "url":"https://www.ebay.com/","is_new":true,"date":"2026-02-25",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Raven_%28Audubon%29.jpg/800px-Raven_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"1d001","source":"1stDibs",
+      "title":"First Octavo Edition — Golden Eagle, Pl. 6",
+      "price":4200,"edition":"Octavo 1st Ed","plate":6,
+      "desc":"Professional framing included. Gallery provenance.",
+      "url":"https://www.1stdibs.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/GoldenEagle-Audubon.jpg/800px-GoldenEagle-Audubon.jpg"]
+    },
+    {
+      "id":"aart003","source":"Audubon Art",
+      "title":"1st Ed. Octavo Pl. 81 — Bald Eagle",
+      "price":3500,"edition":"Octavo 1st Ed","plate":81,
+      "desc":"The most iconic American bird. Exceptional condition with strong hand-coloring.",
+      "url":"https://www.audubonart.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/White-headed_Eagle_%28Audubon%29.jpg/800px-White-headed_Eagle_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"aart001","source":"Audubon Art",
+      "title":"1st Ed. Octavo Pl. 422 — American White Pelican",
+      "price":2800,"edition":"Octavo 1st Ed","plate":422,
+      "desc":"Magnificent upper-tier print. 1840-1844.",
+      "url":"https://www.audubonart.com/","is_new":false,"date":"2026-02-21",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/American_White_Pelican_by_Audubon.jpg/800px-American_White_Pelican_by_Audubon.jpg"]
+    },
+    {
+      "id":"aa003","source":"Antique Audubon",
+      "title":"Pl. 66 — Ivory-billed Woodpecker — First Octavo Edition",
+      "price":2200,"edition":"Octavo 1st Ed","plate":66,
+      "desc":"Now considered extinct. Extremely rare and sought-after.",
+      "url":"https://www.antiqueaudubon.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/IvoryBilledWoodpecker-Audubon.jpg/565px-IvoryBilledWoodpecker-Audubon.jpg"]
+    },
+    {
+      "id":"eb005","source":"eBay",
+      "title":"Octavo 1st Ed — Passenger Pigeon, Pl. 177 — 1840",
+      "price":2100,"edition":"Octavo 1st Ed","plate":177,
+      "desc":"Extinct species. First octavo edition. Highly collectible.",
+      "url":"https://www.ebay.com/","is_new":true,"date":"2026-02-25",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/4/49/Audubon_carolina_pigeon.jpg/800px-Audubon_carolina_pigeon.jpg"]
+    },
+    {
+      "id":"eb001","source":"eBay",
+      "title":"1840 Octavo 1st Ed — Roseate Spoonbill, Pl. 362",
+      "price":1850,"edition":"Octavo 1st Ed","plate":362,
+      "desc":"Outstanding hand-coloring. From a private collection.",
+      "url":"https://www.ebay.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Roseate_Spoonbill_%28Audubon%29.jpg/573px-Roseate_Spoonbill_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"aa002","source":"Antique Audubon",
+      "title":"Pl. 1 — Wild Turkey (Male) — First Octavo Edition",
+      "price":1800,"edition":"Octavo 1st Ed","plate":1,
+      "desc":"Plate 1 — the iconic opening image. Upper-tier print.",
+      "url":"https://www.antiqueaudubon.com/","is_new":true,"date":"2026-02-24",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Audubon-wild-turkey.jpg/800px-Audubon-wild-turkey.jpg"]
+    },
+    {
+      "id":"aart002","source":"Audubon Art",
+      "title":"1st Ed. Octavo Pl. 341 — Great Blue Heron",
+      "price":1500,"edition":"Octavo 1st Ed","plate":341,
+      "desc":"Superior coloring and condition.",
+      "url":"https://www.audubonart.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Audubon-great-blue-heron.jpg/476px-Audubon-great-blue-heron.jpg"]
+    },
+    {
+      "id":"aa001","source":"Antique Audubon",
+      "title":"Pl. 206 — Carolina Parrot (Parakeet) — First Octavo Edition",
+      "price":1250,"edition":"Octavo 1st Ed","plate":206,
+      "desc":"Now extinct species. Highly sought-after upper-tier print.",
+      "url":"https://www.antiqueaudubon.com/","is_new":true,"date":"2026-02-25",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Carolina_Parakeet_%28Audubon%29.jpg/800px-Carolina_Parakeet_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"ops002","source":"The Old Print Shop",
+      "title":"Trumpeter Swan (Adult), Pl. 382",
+      "price":1200,"edition":"Octavo 1st Ed","plate":382,
+      "desc":"First octavo edition. Hand-colored lithograph by J.T. Bowen, Philadelphia.",
+      "url":"https://oldprintshop.com/","is_new":false,"date":"2026-02-20",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Trumpeter_Swan_Audubon.jpg/800px-Trumpeter_Swan_Audubon.jpg"]
+    },
+    {
+      "id":"ops003","source":"The Old Print Shop",
+      "title":"Whooping Crane (Male, adult), Pl. 313",
+      "price":1000,"edition":"Octavo 1st Ed","plate":313,
+      "desc":"First octavo edition. Hand-colored lithograph by J.T. Bowen.",
+      "url":"https://oldprintshop.com/","is_new":false,"date":"2026-02-20",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Audubon_whooping_crane.jpg/800px-Audubon_whooping_crane.jpg"]
+    },
+    {
+      "id":"pa001","source":"Princeton Audubon",
+      "title":"1st Ed Glossy Ibis, Pl. 358 — Matted",
+      "price":750,"edition":"Octavo 1st Ed","plate":358,
+      "desc":"Beautifully matted and ready for framing. J.T. Bowen, 1840-1844.",
+      "url":"https://princetonaudubonprints.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/Glossy_ibis_%28Audubon%29.jpg/493px-Glossy_ibis_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"ops004","source":"The Old Print Shop",
+      "title":"Shoveller Duck (Male and female), Pl. 394",
+      "price":725,"edition":"Octavo 1st Ed","plate":394,
+      "desc":"First octavo edition. Hand-colored lithograph.",
+      "url":"https://oldprintshop.com/","is_new":false,"date":"2026-02-20",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Northern_shoveler_%28Audubon%29.jpg/800px-Northern_shoveler_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"ops005","source":"The Old Print Shop",
+      "title":"Black Crowned Night Heron, Pl. 363",
+      "price":700,"edition":"Octavo 1st Ed","plate":363,
+      "desc":"First octavo edition. Hand-colored lithograph by J.T. Bowen.",
+      "url":"https://oldprintshop.com/","is_new":true,"date":"2026-02-24",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/0/06/Night_Heron_%28Audubon%29.jpg/556px-Night_Heron_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"pk001","source":"Panteek",
+      "title":"Great Horned Owl, Pl. 39",
+      "price":675,"edition":"Octavo","plate":39,
+      "desc":"Octavo edition. Good condition.",
+      "url":"https://www.panteek.com/","is_new":false,"date":"2026-02-21",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Great_Horned_Owl_Audubon.jpg/562px-Great_Horned_Owl_Audubon.jpg"]
+    },
+    {
+      "id":"pk002","source":"Panteek",
+      "title":"Snowy Owl, Pl. 28",
+      "price":595,"edition":"Octavo","plate":28,
+      "desc":"Octavo edition. Beautiful condition.",
+      "url":"https://www.panteek.com/","is_new":false,"date":"2026-02-21",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg/800px-John_James_Audubon_-_Snowy_Owl_-_Google_Art_Project.jpg"]
+    },
+    {
+      "id":"pa002","source":"Princeton Audubon",
+      "title":"1st Ed Snowy Egret, Pl. 374 — Matted",
+      "price":550,"edition":"Octavo 1st Ed","plate":374,
+      "desc":"Matted and ready for framing.",
+      "url":"https://princetonaudubonprints.com/","is_new":false,"date":"2026-02-20",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Snowy_Heron_Audubon.jpg/481px-Snowy_Heron_Audubon.jpg"]
+    },
+    {
+      "id":"pa004","source":"Princeton Audubon",
+      "title":"1st Ed Ruby-throated Humming Bird, Pl. 236",
+      "price":475,"edition":"Octavo 1st Ed","plate":236,
+      "desc":"Original hand-colored lithograph.",
+      "url":"https://princetonaudubonprints.com/","is_new":true,"date":"2026-02-25",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Ruby-Throated_Hummingbird_%28Audubon%29.jpg/800px-Ruby-Throated_Hummingbird_%28Audubon%29.jpg"]
+    },
+    {
+      "id":"aa004","source":"Antique Audubon",
+      "title":"Pl. 31 — American Flamingo — Later Edition",
+      "price":450,"edition":"Octavo Later Ed","plate":31,
+      "desc":"Vibrant original hand-coloring. Beautiful condition.",
+      "url":"https://www.antiqueaudubon.com/","is_new":false,"date":"2026-02-22",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/2/20/Audubon%28Flamingo%29.jpg/494px-Audubon%28Flamingo%29.jpg"]
+    },
+    {
+      "id":"pk003","source":"Panteek",
+      "title":"Red-tailed Hawk, Pl. 7",
+      "price":425,"edition":"Octavo","plate":7,
+      "desc":"Octavo edition.",
+      "url":"https://www.panteek.com/","is_new":true,"date":"2026-02-26",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Red-tailed_hawk_Audubon.jpg/568px-Red-tailed_hawk_Audubon.jpg"]
+    },
+    {
+      "id":"eb003","source":"eBay",
+      "title":"1860 Octavo Later Ed — American Robin, Pl. 141",
+      "price":175,"edition":"Octavo Later Ed","plate":141,
+      "desc":"Later edition, circa 1860. Good condition with bright colors.",
+      "url":"https://www.ebay.com/","is_new":false,"date":"2026-02-22",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/American_Robin_Audubon.jpg/800px-American_Robin_Audubon.jpg"]
+    },
+    {
+      "id":"pa005","source":"Princeton Audubon",
+      "title":"Later Ed American Goldfinch, Pl. 131",
+      "price":125,"edition":"Octavo Later Ed","plate":131,
+      "desc":"Later edition. Hand-colored lithograph.",
+      "url":"https://princetonaudubonprints.com/","is_new":false,"date":"2026-02-20",
+      "images":["https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/American_Goldfinch-Audubon.jpg/800px-American_Goldfinch-Audubon.jpg"]
+    }
+  ]
+}

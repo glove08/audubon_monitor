@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Audubon">
+<meta name="theme-color" content="#f4efe3">
+<meta name="description" content="Monitor Birds of America print listings across 7 dealer sources">
+<title>Audubon Print Monitor</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --d: 'Cormorant Garamond', Georgia, serif;
+  --g: 'EB Garamond', Georgia, serif;
+  --s: 'DM Sans', -apple-system, sans-serif;
+  --bg: #f4efe3;
+  --card: rgba(255,252,245,.55);
+  --card-new: rgba(255,250,238,.95);
+  --border: #d4c9a8;
+  --text: #2a2016;
+  --muted: #8a7e6b;
+  --faint: #a09080;
+  --accent: #c4501a;
+  --brown: #5a4a2e;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--g);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
+input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+@keyframes spin { to { transform: rotate(360deg) } }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+.loading-screen {
+  position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  transition: opacity .4s ease;
+}
+.loading-screen.done { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 32px; height: 32px; border: 2px solid #d4c9a844;
+  border-top-color: var(--faint); border-radius: 50%; animation: spin .8s linear infinite;
+}
+.card-wrap:hover .zoom-overlay { background: rgba(30,25,15,.12) !important; }
+.card-wrap:hover .zoom-label { opacity: 1 !important; }
+.listing-card { transition: all .18s ease; }
+.listing-card:hover { border-color: #8b6030 !important; box-shadow: 0 3px 14px rgba(100,60,20,.09); }
+.nav-btn:hover { background: rgba(30,25,15,.7) !important; }
+.gallery-link:hover { background: rgba(255,255,255,.08) !important; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.15.0/Recharts.min.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<div class="loading-screen" id="loader">
+  <div style="font-family:var(--d);font-size:24px;font-weight:300;color:var(--text)">Audubon Print Monitor</div>
+  <div class="loading-spinner"></div>
+  <div style="font-family:var(--s);font-size:10px;color:var(--faint);letter-spacing:.06em">LOADING LISTINGS</div>
+</div>
+
+<script type="text/babel">
+const {useState,useMemo,useRef,useCallback,useEffect} = React;
+const {LineChart,Line,XAxis,YAxis,Tooltip,ResponsiveContainer,BarChart,Bar,Cell} = Recharts;
+
+const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","eBay":"#a07818","1stDibs":"#5c1a1a"};
+const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
+const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","eBay":"eBay","1stDibs":"1stD"};
+const fmt=n=>n==null?"Inquire":n>=10000?`$${(n/1000).toFixed(0)}k`:n>=1000?`$${(n/1000).toFixed(1)}k`:`$${n}`;
+const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
+
+/* ═══ ZOOMABLE IMAGE ═══ */
+function ZoomableImage({src,alt,onSwipe,isActive}){
+  const cRef=useRef(null);
+  const s=useRef({scale:1,x:0,y:0,startDist:0,startScale:1,startX:0,startY:0,startPanX:0,startPanY:0,
+    isPinching:false,isPanning:false,lastTap:0,tapX:0,tapY:0,swipeStartX:0,swipeStartY:0,hasMoved:false,tst:0});
+  const[tf,setTf]=useState({scale:1,x:0,y:0});
+  const[loaded,setLoaded]=useState(false);
+  const[failed,setFailed]=useState(false);
+
+  useEffect(()=>{Object.assign(s.current,{scale:1,x:0,y:0});setTf({scale:1,x:0,y:0});setLoaded(false);setFailed(false);},[src,isActive]);
+
+  const clamp=useCallback((x,y,sc)=>{
+    if(sc<=1)return{x:0,y:0};const c=cRef.current;if(!c)return{x,y};
+    const r=c.getBoundingClientRect(),mx=(r.width*(sc-1))/2,my=(r.height*(sc-1))/2;
+    return{x:Math.max(-mx,Math.min(mx,x)),y:Math.max(-my,Math.min(my,y))};
+  },[]);
+
+  const apply=useCallback((sc,x,y)=>{
+    const scale=Math.max(1,Math.min(5,sc)),c=clamp(x,y,scale);
+    Object.assign(s.current,{scale,x:c.x,y:c.y});setTf({scale,...c});
+  },[clamp]);
+
+  const dist=t=>Math.sqrt((t[0].clientX-t[1].clientX)**2+(t[0].clientY-t[1].clientY)**2);
+
+  const zoomTo=useCallback((cx,cy,target)=>{
+    const c=cRef.current;if(!c)return;const r=c.getBoundingClientRect();
+    const rx=cx-r.left-r.width/2,ry=cy-r.top-r.height/2;
+    apply(target,-rx*(target-1),-ry*(target-1));
+  },[apply]);
+
+  const onTS=useCallback(e=>{
+    const st=s.current,t=e.touches;st.tst=Date.now();st.hasMoved=false;
+    if(t.length===2){e.preventDefault();st.isPinching=true;st.isPanning=false;st.startDist=dist(t);st.startScale=st.scale;
+      const cx=(t[0].clientX+t[1].clientX)/2,cy=(t[0].clientY+t[1].clientY)/2;st.startPanX=cx-st.x;st.startPanY=cy-st.y;
+    }else if(t.length===1){st.isPinching=false;
+      if(st.scale>1){st.isPanning=true;st.startX=t[0].clientX-st.x;st.startY=t[0].clientY-st.y;}
+      else{st.isPanning=false;st.swipeStartX=t[0].clientX;st.swipeStartY=t[0].clientY;}
+      st.tapX=t[0].clientX;st.tapY=t[0].clientY;
+    }
+  },[]);
+
+  const onTM=useCallback(e=>{
+    const st=s.current,t=e.touches;
+    if(st.isPinching&&t.length===2){e.preventDefault();st.hasMoved=true;
+      const nd=dist(t),ns=st.startScale*(nd/st.startDist);
+      const cx=(t[0].clientX+t[1].clientX)/2,cy=(t[0].clientY+t[1].clientY)/2;
+      apply(ns,cx-st.startPanX,cy-st.startPanY);
+    }else if(t.length===1){
+      const dx=t[0].clientX-st.tapX,dy=t[0].clientY-st.tapY;
+      if(Math.abs(dx)>5||Math.abs(dy)>5)st.hasMoved=true;
+      if(st.scale>1){e.preventDefault();apply(st.scale,t[0].clientX-st.startX,t[0].clientY-st.startY);}
+    }
+  },[apply]);
+
+  const onTE=useCallback(e=>{
+    const st=s.current;
+    if(st.isPinching){st.isPinching=false;if(st.scale<1.1)apply(1,0,0);return;}
+    if(st.scale<=1&&st.hasMoved&&e.changedTouches.length===1){
+      const dx=e.changedTouches[0].clientX-st.swipeStartX,dy=e.changedTouches[0].clientY-st.swipeStartY;
+      if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.5){onSwipe?.(dx<0?"next":"prev");return;}
+    }
+    if(!st.hasMoved&&Date.now()-st.tst<300){
+      const now=Date.now();
+      if(now-st.lastTap<350){st.scale>1?apply(1,0,0):zoomTo(st.tapX,st.tapY,2.8);st.lastTap=0;}
+      else{st.lastTap=now;setTimeout(()=>{if(s.current.lastTap===now){st.scale>1?apply(1,0,0):zoomTo(st.tapX,st.tapY,2.8);}},320);}
+    }
+  },[apply,onSwipe,zoomTo]);
+
+  const onWheel=useCallback(e=>{
+    e.preventDefault();const st=s.current,d=e.deltaY>0?.85:1.18,ns=st.scale*d;
+    if(ns<=1){apply(1,0,0);return;}
+    const r=cRef.current.getBoundingClientRect(),rx=e.clientX-r.left-r.width/2,ry=e.clientY-r.top-r.height/2;
+    apply(ns,st.x-rx*(d-1),st.y-ry*(d-1));
+  },[apply]);
+
+  const onMD=useCallback(e=>{const st=s.current;if(st.scale<=1)return;st.isPanning=true;st.startX=e.clientX-st.x;st.startY=e.clientY-st.y;e.preventDefault();},[]);
+  const onMM=useCallback(e=>{const st=s.current;if(!st.isPanning||st.scale<=1)return;apply(st.scale,e.clientX-st.startX,e.clientY-st.startY);},[apply]);
+  const onMU=useCallback(()=>{s.current.isPanning=false;},[]);
+  const onDC=useCallback(e=>{s.current.scale>1?apply(1,0,0):zoomTo(e.clientX,e.clientY,2.8);},[apply,zoomTo]);
+
+  return(
+    <div ref={cRef} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE}
+      onWheel={onWheel} onMouseDown={onMD} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU} onDoubleClick={onDC}
+      style={{width:"100%",height:"100%",overflow:"hidden",touchAction:"none",display:"flex",alignItems:"center",justifyContent:"center",
+        cursor:tf.scale>1?"grab":"zoom-in",userSelect:"none",WebkitUserSelect:"none"}}>
+      {failed?(
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,color:"#a09080",fontFamily:"var(--s)",fontSize:13}}>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#b0a890" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          Image unavailable</div>
+      ):(
+        <img src={src} alt={alt} draggable={false} onLoad={()=>setLoaded(true)} onError={()=>setFailed(true)}
+          style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",
+            transform:`translate(${tf.x}px,${tf.y}px) scale(${tf.scale})`,
+            transition:s.current?.isPinching||s.current?.isPanning?"none":"transform .3s cubic-bezier(.25,.46,.45,.94)",
+            willChange:"transform",opacity:loaded?1:0}}/>
+      )}
+      {!loaded&&!failed&&<div style={{position:"absolute",width:28,height:28,border:"2px solid #d4c9a844",borderTopColor:"#a09080",borderRadius:"50%",animation:"spin .8s linear infinite"}}/>}
+      {tf.scale>1&&<div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",
+        background:"rgba(30,25,15,.6)",backdropFilter:"blur(6px)",borderRadius:12,padding:"4px 12px",
+        fontFamily:"var(--s)",fontSize:10,color:"#e8dcc8",pointerEvents:"none"}}>{Math.round(tf.scale*100)}% — tap to reset</div>}
+    </div>
+  );
+}
+
+/* ═══ IMAGE GALLERY ═══ */
+function ImageGallery({listing,onClose}){
+  const[idx,setIdx]=useState(0);
+  const imgs=listing.images||[];const n=imgs.length;
+  const handleSwipe=useCallback(dir=>{if(dir==="next"&&idx<n-1)setIdx(i=>i+1);if(dir==="prev"&&idx>0)setIdx(i=>i-1);},[idx,n]);
+  useEffect(()=>{
+    const h=e=>{if(e.key==="Escape")onClose();if(e.key==="ArrowRight"&&idx<n-1)setIdx(i=>i+1);if(e.key==="ArrowLeft"&&idx>0)setIdx(i=>i-1);};
+    window.addEventListener("keydown",h);return()=>window.removeEventListener("keydown",h);
+  },[idx,n,onClose]);
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(15,12,8,.94)",backdropFilter:"blur(10px)",
+      display:"flex",flexDirection:"column",animation:"fadeIn .2s ease",paddingTop:"var(--safe-top)",paddingBottom:"var(--safe-bottom)"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",flexShrink:0,borderBottom:"1px solid #ffffff0d"}}>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontFamily:"var(--g)",fontSize:13,fontStyle:"italic",color:"#d4c9a8",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{listing.title}</div>
+          <div style={{fontFamily:"var(--s)",fontSize:9.5,color:"#8a7e6b",marginTop:1}}>{listing.source} · {fmtF(listing.price)}{n>1&&` · ${idx+1} of ${n}`}</div>
+        </div>
+        <div style={{display:"flex",gap:6,alignItems:"center",marginLeft:10,flexShrink:0}}>
+          <a href={listing.url} target="_blank" rel="noopener noreferrer" className="gallery-link"
+            style={{fontFamily:"var(--s)",fontSize:10,color:"#a09080",textDecoration:"none",border:"1px solid #a0908040",padding:"4px 10px",borderRadius:3,transition:"background .15s"}}>View listing →</a>
+          <button onClick={onClose} style={{background:"none",border:"1px solid #a0908040",borderRadius:3,padding:"4px 10px",cursor:"pointer",color:"#a09080",fontSize:14,fontFamily:"var(--s)"}}>✕</button>
+        </div>
+      </div>
+      <div style={{flex:1,position:"relative",overflow:"hidden"}}>
+        {n>0?<ZoomableImage key={`${listing.id}-${idx}`} src={imgs[idx]} alt={listing.title} onSwipe={handleSwipe} isActive={true}/>:
+          <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",color:"#6b6050",fontFamily:"var(--s)"}}>No images</div>}
+        {n>1&&idx>0&&<button onClick={()=>setIdx(i=>i-1)} className="nav-btn" style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",
+          background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",border:"1px solid #ffffff15",borderRadius:"50%",width:38,height:38,
+          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>‹</button>}
+        {n>1&&idx<n-1&&<button onClick={()=>setIdx(i=>i+1)} className="nav-btn" style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
+          background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",border:"1px solid #ffffff15",borderRadius:"50%",width:38,height:38,
+          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>›</button>}
+      </div>
+      {n>1&&<div style={{display:"flex",justifyContent:"center",gap:6,padding:"10px 0 6px",flexShrink:0}}>
+        {imgs.map((_,i)=><button key={i} onClick={()=>setIdx(i)} style={{width:i===idx?18:6,height:6,borderRadius:3,border:"none",
+          background:i===idx?"#d4c9a8":"#d4c9a830",cursor:"pointer",transition:"all .25s"}}/>)}
+      </div>}
+      <div style={{textAlign:"center",paddingBottom:10,fontFamily:"var(--s)",fontSize:9,color:"#6b6050",letterSpacing:".04em"}}>Tap to zoom · Pinch to zoom · Swipe to navigate</div>
+    </div>
+  );
+}
+
+/* ═══ UI ATOMS ═══ */
+const Badge=({text,color})=>(
+  <span style={{display:"inline-block",fontSize:9,fontFamily:"var(--s)",letterSpacing:".06em",textTransform:"uppercase",
+    color,border:`1px solid ${color}35`,background:`${color}08`,padding:"1.5px 6px",borderRadius:2,fontWeight:600,lineHeight:"15px"}}>{text}</span>
+);
+const Pill=({label,active,onClick,count})=>(
+  <button onClick={onClick} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
+    fontFamily:"var(--s)",letterSpacing:".03em",cursor:"pointer",transition:"all .15s",
+    border:active?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
+    background:active?"var(--brown)":"transparent",color:active?"#faf5e8":"#6b5a3c",fontWeight:active?600:400}}>
+    {label}{count!=null&&<span style={{fontSize:9,opacity:.65,background:active?"#fff2":"#5a4a2e12",padding:"0 4px",borderRadius:6}}>{count}</span>}
+  </button>
+);
+
+/* ═══ LISTING CARD ═══ */
+function ListingCard({listing:l,onImage,onDetail,index}){
+  const[loaded,setLoaded]=useState(false);
+  const[failed,setFailed]=useState(false);
+  const thumb=l.images?.[0];const ic=l.images?.length||0;
+  return(
+    <div className="listing-card" style={{background:l.is_new?"var(--card-new)":"var(--card)",
+      border:l.is_new?"1px solid #c4501a20":"1px solid var(--border)",borderRadius:4,overflow:"hidden",position:"relative",
+      animation:`fadeUp .3s ease ${index*.03}s both`}}>
+      {l.is_new&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"linear-gradient(90deg,var(--accent),transparent)",zIndex:2}}/>}
+      <div onClick={()=>onImage(l)} style={{width:"100%",height:190,background:"#ece4d4",position:"relative",cursor:"pointer",overflow:"hidden"}}>
+        {thumb&&!failed?(
+          <>
+            <img src={thumb} alt={l.title} draggable={false} onLoad={()=>setLoaded(true)} onError={()=>setFailed(true)}
+              style={{width:"100%",height:"100%",objectFit:"contain",opacity:loaded?1:0,transition:"opacity .4s",background:"#f0e8d8",padding:4}}/>
+            {!loaded&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <div style={{width:22,height:22,border:"2px solid #d4c9a844",borderTopColor:"var(--faint)",borderRadius:"50%",animation:"spin .8s linear infinite"}}/></div>}
+          </>
+        ):(
+          <div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:6}}>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#b8ad96" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span style={{fontFamily:"var(--s)",fontSize:10,color:"#a09888"}}>No image</span></div>
+        )}
+        {ic>1&&<div style={{position:"absolute",bottom:7,right:7,background:"rgba(30,25,15,.6)",backdropFilter:"blur(4px)",borderRadius:9,padding:"2px 7px",
+          fontFamily:"var(--s)",fontSize:9,color:"#e8dcc8",display:"flex",alignItems:"center",gap:3}}>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="2" width="15" height="15" rx="2"/><path d="M7 22h13a2 2 0 002-2V7"/></svg>{ic}</div>}
+        <div className="zoom-overlay" style={{position:"absolute",inset:0,background:"transparent",transition:"background .2s",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div className="zoom-label" style={{background:"rgba(30,25,15,.55)",borderRadius:16,padding:"4px 11px",fontFamily:"var(--s)",fontSize:10,color:"#e8dcc8",opacity:0,transition:"opacity .2s"}}>Tap to view</div>
+        </div>
+      </div>
+      <div onClick={()=>onDetail(l)} style={{padding:"10px 12px",cursor:"pointer"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:5}}>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
+            <Badge text={l.edition} color={ED_C[l.edition]||"#888"}/>
+            {l.is_new&&<Badge text="● New" color="var(--accent)"/>}
+            {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
+          </div>
+          <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap"}}>{fmtF(l.price)}</div>
+        </div>
+        <h3 style={{fontFamily:"var(--g)",fontSize:13,fontWeight:400,fontStyle:"italic",margin:"0 0 4px",lineHeight:1.3}}>{l.title}</h3>
+        <p style={{fontFamily:"var(--s)",fontSize:10.5,color:"var(--muted)",lineHeight:1.45,margin:"0 0 6px",
+          display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{l.desc}</p>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontFamily:"var(--s)",color:"#9a8e7b"}}>
+            <span style={{width:6,height:6,borderRadius:"50%",background:SRC_C[l.source]||"#888"}}/>{l.source}</span>
+          <span style={{fontSize:9,fontFamily:"var(--s)",color:"#b0a890"}}>{l.date}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ MAIN APP ═══ */
+function App(){
+  const[data,setData]=useState(null);
+  const[error,setError]=useState(null);
+  const[newOnly,setNewOnly]=useState(false);
+  const[src,setSrc]=useState("All");
+  const[ed,setEd]=useState("All");
+  const[sort,setSort]=useState("price-desc");
+  const[q,setQ]=useState("");
+  const[gallery,setGallery]=useState(null);
+  const[detail,setDetail]=useState(null);
+  const[filtersOpen,setFiltersOpen]=useState(false);
+
+  useEffect(()=>{
+    fetch("data/listings.json?"+Date.now())
+      .then(r=>{if(!r.ok)throw new Error("Failed");return r.json();})
+      .then(d=>{setData(d);document.getElementById("loader")?.classList.add("done");setTimeout(()=>{document.getElementById("loader")?.remove();},500);})
+      .catch(e=>{setError(e.message);document.getElementById("loader")?.classList.add("done");});
+  },[]);
+
+  const LISTINGS=data?.listings||[];
+  const HISTORY=data?.history||[];
+  const meta=data?.metadata||{};
+  const sources=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.source))].sort()],[LISTINGS]);
+  const editions=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.edition))]],[LISTINGS]);
+
+  const items=useMemo(()=>{
+    let r=[...LISTINGS];
+    if(newOnly)r=r.filter(x=>x.is_new);
+    if(src!=="All")r=r.filter(x=>x.source===src);
+    if(ed!=="All")r=r.filter(x=>x.edition===ed);
+    if(q){const s=q.toLowerCase();r=r.filter(x=>x.title.toLowerCase().includes(s)||x.desc.toLowerCase().includes(s)||(x.plate&&x.plate.toString()===s));}
+    if(sort==="price-desc")r.sort((a,b)=>(b.price||0)-(a.price||0));
+    if(sort==="price-asc")r.sort((a,b)=>(a.price||1e9)-(b.price||1e9));
+    if(sort==="new")r.sort((a,b)=>(b.is_new?1:0)-(a.is_new?1:0)||(b.price||0)-(a.price||0));
+    if(sort==="plate")r.sort((a,b)=>(a.plate||999)-(b.plate||999));
+    return r;
+  },[LISTINGS,newOnly,src,ed,sort,q]);
+
+  const newCount=LISTINGS.filter(x=>x.is_new).length;
+  const srcCounts=useMemo(()=>{const c={};LISTINGS.forEach(x=>{c[x.source]=(c[x.source]||0)+1});return c;},[LISTINGS]);
+  const priceBuckets=useMemo(()=>{
+    const b=[{r:"<$500",n:0},{r:"$500–1k",n:0},{r:"$1–3k",n:0},{r:"$3–10k",n:0},{r:"$10k+",n:0}];
+    items.forEach(x=>{if(!x.price)return;if(x.price<500)b[0].n++;else if(x.price<1000)b[1].n++;else if(x.price<3000)b[2].n++;else if(x.price<10000)b[3].n++;else b[4].n++;});
+    return b;
+  },[items]);
+  const af=(src!=="All"?1:0)+(ed!=="All"?1:0)+(newOnly?1:0)+(q?1:0);
+
+  if(error)return(
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:40,textAlign:"center"}}>
+      <div style={{fontFamily:"var(--d)",fontSize:28,marginBottom:8}}>Audubon Print Monitor</div>
+      <div style={{fontFamily:"var(--s)",fontSize:13,color:"var(--accent)",marginBottom:16}}>Could not load listings data</div>
+      <div style={{fontFamily:"var(--s)",fontSize:11,color:"var(--muted)",maxWidth:360,lineHeight:1.6}}>
+        Make sure <code style={{background:"#e8e0cc",padding:"1px 5px",borderRadius:2}}>data/listings.json</code> exists.
+        Run <code style={{background:"#e8e0cc",padding:"1px 5px",borderRadius:2}}>python3 audubon_scraper.py</code> to generate it.</div>
+    </div>
+  );
+  if(!data)return null;
+
+  return(
+    <div style={{minHeight:"100vh",backgroundImage:"radial-gradient(ellipse at 15% 50%,rgba(120,70,20,.025) 0%,transparent 60%),radial-gradient(ellipse at 85% 15%,rgba(40,80,50,.025) 0%,transparent 60%)"}}>
+      {gallery&&<ImageGallery listing={gallery} onClose={()=>setGallery(null)}/>}
+      {detail&&!gallery&&(
+        <div onClick={()=>setDetail(null)} style={{position:"fixed",inset:0,background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",zIndex:999,
+          display:"flex",alignItems:"center",justifyContent:"center",padding:16,animation:"fadeIn .15s ease"}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#faf6ec",border:"1px solid #c9bda0",borderRadius:5,maxWidth:480,width:"100%",
+            padding:20,animation:"fadeUp .25s ease",position:"relative",maxHeight:"90vh",overflowY:"auto"}}>
+            <button onClick={()=>setDetail(null)} style={{position:"absolute",top:8,right:10,background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--faint)",fontFamily:"var(--s)"}}>✕</button>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
+              <Badge text={detail.edition} color={ED_C[detail.edition]||"#888"}/>
+              {detail.is_new&&<Badge text="● New" color="var(--accent)"/>}
+              {detail.plate&&<span style={{fontSize:10,color:"#9a8e7b",fontFamily:"var(--s)"}}>Plate {detail.plate}</span>}
+            </div>
+            <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",marginBottom:4,lineHeight:1.3}}>{detail.title}</h2>
+            <div style={{fontFamily:"var(--d)",fontSize:24,marginBottom:10}}>{fmtF(detail.price)}</div>
+            {detail.images?.length>0&&(
+              <div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
+                {detail.images.map((img,i)=>(
+                  <div key={i} onClick={()=>{setGallery(detail);setDetail(null);}} style={{width:64,height:64,borderRadius:3,overflow:"hidden",cursor:"pointer",
+                    border:"1px solid var(--border)",flexShrink:0,background:"#ece4d4"}}>
+                    <img src={img} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/></div>
+                ))}
+              </div>
+            )}
+            <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,flexWrap:"wrap",gap:8}}>
+              <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
+                <span style={{width:7,height:7,borderRadius:"50%",background:SRC_C[detail.source]||"#888"}}/>{detail.source}</span>
+              <div style={{display:"flex",gap:6}}>
+                {detail.images?.length>0&&<button onClick={()=>{setGallery(detail);setDetail(null);}} style={{fontFamily:"var(--s)",fontSize:11,color:"#6b5a3c",background:"none",
+                  border:"1px solid var(--border)",padding:"5px 12px",borderRadius:3,cursor:"pointer"}}>Images ({detail.images.length})</button>}
+                <a href={detail.url} target="_blank" rel="noopener noreferrer" style={{fontFamily:"var(--s)",fontSize:11,fontWeight:500,color:"#faf5e8",background:"var(--brown)",
+                  padding:"5px 12px",borderRadius:3,textDecoration:"none"}}>View listing →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header style={{borderBottom:"1px solid var(--border)",background:"rgba(250,246,236,.92)",backdropFilter:"blur(12px)",
+        padding:`calc(10px + var(--safe-top)) 16px 10px`,position:"sticky",top:0,zIndex:100}}>
+        <div style={{maxWidth:1100,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:6,marginBottom:10}}>
+            <div>
+              <h1 style={{fontFamily:"var(--d)",fontSize:22,fontWeight:300}}>Audubon Print Monitor</h1>
+              <p style={{fontFamily:"var(--s)",fontSize:9,color:"#9a8e7b",letterSpacing:".04em",marginTop:1}}>Havell · Bien · Octavo — {sources.length-1} sources</p>
+            </div>
+            <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--faint)",textAlign:"right"}}>
+              {meta.last_scan&&`${new Date(meta.last_scan).toLocaleDateString("en-US",{month:"short",day:"numeric"})} · ${new Date(meta.last_scan).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}`}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true},
+              {l:"Range",v:items.length?`${fmt(Math.min(...items.filter(x=>x.price).map(x=>x.price)))}–${fmt(Math.max(...items.filter(x=>x.price).map(x=>x.price)))}`:"—"}
+            ].map((c,i)=>(
+              <div key={i} style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden"}}>
+                {c.a&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"var(--accent)"}}/>}
+                <div style={{fontSize:8.5,fontFamily:"var(--s)",letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:1}}>{c.l}</div>
+                <div style={{fontSize:18,fontFamily:"var(--d)",lineHeight:1.1}}>{c.v}</div>
+                {c.s&&<div style={{fontSize:8.5,color:"var(--faint)",fontFamily:"var(--s)",marginTop:1}}>{c.s}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <div style={{maxWidth:1100,margin:"0 auto",padding:"12px 16px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+          <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"8px 10px"}}>
+            <div style={{fontFamily:"var(--s)",fontSize:8.5,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:5}}>Trend</div>
+            <ResponsiveContainer width="100%" height={70}>
+              <LineChart data={HISTORY}>
+                <XAxis dataKey="d" tick={{fontSize:8,fill:"#a09080",fontFamily:"DM Sans"}} axisLine={false} tickLine={false}/>
+                <YAxis hide domain={["dataMin-2","dataMax+2"]}/>
+                <Tooltip contentStyle={{fontFamily:"DM Sans",fontSize:10,border:"1px solid #d4c9a8",borderRadius:3,background:"#faf6ec"}}/>
+                <Line type="monotone" dataKey="total" stroke="#2e6e48" strokeWidth={2} dot={{r:1.5,fill:"#2e6e48"}} name="Total"/>
+                <Line type="monotone" dataKey="nw" stroke="#c4501a" strokeWidth={1.5} dot={{r:1,fill:"#c4501a"}} strokeDasharray="4 2" name="New"/>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"8px 10px"}}>
+            <div style={{fontFamily:"var(--s)",fontSize:8.5,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:5}}>Prices</div>
+            <ResponsiveContainer width="100%" height={70}>
+              <BarChart data={priceBuckets}>
+                <XAxis dataKey="r" tick={{fontSize:7,fill:"#a09080",fontFamily:"DM Sans"}} axisLine={false} tickLine={false}/>
+                <YAxis hide/>
+                <Tooltip contentStyle={{fontFamily:"DM Sans",fontSize:10,border:"1px solid #d4c9a8",borderRadius:3,background:"#faf6ec"}}/>
+                <Bar dataKey="n" radius={[2,2,0,0]} name="Listings">{priceBuckets.map((_,i)=><Cell key={i} fill={["#9a8e70","#8a7e60","#7a6e50","#6a5e40","#5a4e30"][i]}/>)}</Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={{marginBottom:12,paddingBottom:10,borderBottom:"1px solid #e5dcc8"}}>
+          <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
+            <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search species, plate #…" style={{
+              fontFamily:"var(--s)",fontSize:11,padding:"5px 11px",border:"1px solid var(--border)",borderRadius:14,background:"rgba(255,252,245,.8)",color:"var(--text)",width:155}}/>
+            <Pill label={`New (${newCount})`} active={newOnly} onClick={()=>setNewOnly(!newOnly)}/>
+            <button onClick={()=>setFiltersOpen(!filtersOpen)} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
+              fontFamily:"var(--s)",cursor:"pointer",border:filtersOpen||af>1?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
+              background:filtersOpen?"var(--brown)":"transparent",color:filtersOpen?"#faf5e8":"#6b5a3c",transition:"all .15s"}}>
+              Filters{af>1&&` (${af})`}<span style={{fontSize:8,transform:filtersOpen?"rotate(180deg)":"none",transition:"transform .2s"}}>▼</span>
+            </button>
+            <div style={{flex:1}}/>
+            <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontFamily:"var(--s)",fontSize:10,padding:"4px 8px",border:"1px solid var(--border)",
+              borderRadius:3,background:"rgba(255,252,245,.8)",color:"#6b5a3c",cursor:"pointer"}}>
+              <option value="price-desc">Price ↓</option><option value="price-asc">Price ↑</option><option value="new">New First</option><option value="plate">Plate #</option>
+            </select>
+          </div>
+          {filtersOpen&&(
+            <div style={{marginTop:8,animation:"fadeUp .2s ease"}}>
+              <div style={{marginBottom:6}}>
+                <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--muted)",letterSpacing:".06em",textTransform:"uppercase",marginBottom:4}}>Source</div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                  {sources.map(s=><Pill key={s} label={s==="All"?s:(SRC_ABBR[s]||s)} active={src===s} onClick={()=>setSrc(s)} count={s==="All"?LISTINGS.length:srcCounts[s]}/>)}
+                </div>
+              </div>
+              <div>
+                <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--muted)",letterSpacing:".06em",textTransform:"uppercase",marginBottom:4}}>Edition</div>
+                <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                  {editions.map(e=><Pill key={e} label={e} active={ed===e} onClick={()=>setEd(e)}/>)}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div style={{fontFamily:"var(--s)",fontSize:10.5,color:"var(--muted)",marginBottom:8}}>
+          {items.length} listing{items.length!==1?"s":""}{newOnly?" (new only)":""}{src!=="All"?` · ${src}`:""}{ed!=="All"?` · ${ed}`:""}
+        </div>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
+          {items.map((l,i)=><div key={l.id} className="card-wrap"><ListingCard listing={l} index={i} onImage={setGallery} onDetail={setDetail}/></div>)}
+        </div>
+
+        {items.length===0&&(
+          <div style={{textAlign:"center",padding:"50px 20px",color:"var(--faint)"}}>
+            <div style={{fontFamily:"var(--d)",fontSize:22,marginBottom:6}}>No listings match</div>
+            <div style={{fontFamily:"var(--s)",fontSize:12}}>Try adjusting your filters</div>
+          </div>
+        )}
+
+        <footer style={{marginTop:28,paddingTop:12,borderTop:"1px solid var(--border)",
+          fontFamily:"var(--s)",fontSize:9,color:"#b0a890",paddingBottom:`calc(16px + var(--safe-bottom))`,textAlign:"center",lineHeight:1.6}}>
+          Audubon Print Monitor · {sources.length-1} sources · Powered by audubon_scraper.py
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
