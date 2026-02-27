@@ -122,9 +122,9 @@ function MiniBarChart({data, width=300, height=70}) {
   );
 }
 
-const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","eBay":"#a07818","1stDibs":"#5c1a1a"};
+const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","Invaluable":"#a07818","LiveAuctioneers":"#5c1a6e"};
 const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
-const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","eBay":"eBay","1stDibs":"1stD"};
+const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","Invaluable":"Inv","LiveAuctioneers":"LA"};
 const fmt=n=>n==null?"Inquire":n>=10000?`$${(n/1000).toFixed(0)}k`:n>=1000?`$${(n/1000).toFixed(1)}k`:`$${n}`;
 const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
 
