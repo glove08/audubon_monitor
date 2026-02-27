@@ -521,8 +521,10 @@ def scrape_audubon_art():
         return None
 
     for base_url in category_urls:
-        for page_num in range(1, 6):
-            url = base_url if page_num == 1 else f"{base_url}page/{page_num}/"
+        for page_num in range(1, 26):
+            # WooCommerce per_page param to reduce total requests
+            sep = "?" if "?" not in base_url else "&"
+            url = f"{base_url}{sep}per_page=96" if page_num == 1 else f"{base_url}page/{page_num}/?per_page=96"
             resp = _fetch_with_fallback(url)
             if not resp:
                 if page_num == 1:
@@ -579,9 +581,7 @@ def scrape_audubon_art():
                         image_url=image_url
                     ))
 
-            time.sleep(1)
-
-    # Dedupe across overlapping categories
+            time.sleep(0.5)
     seen = set()
     deduped = []
     for l in listings:
