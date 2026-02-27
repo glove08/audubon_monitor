@@ -67,7 +67,6 @@ input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.15.0/Recharts.min.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -79,7 +78,49 @@ input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
 
 <script type="text/babel">
 const {useState,useMemo,useRef,useCallback,useEffect} = React;
-const {LineChart,Line,XAxis,YAxis,Tooltip,ResponsiveContainer,BarChart,Bar,Cell} = Recharts;
+// Pure SVG charts — no external charting library needed
+function MiniLineChart({data, width=300, height=70}) {
+  if(!data||!data.length) return null;
+  const pad={t:8,r:8,b:18,l:8};
+  const w=width-pad.l-pad.r, h=height-pad.t-pad.b;
+  const maxT=Math.max(...data.map(d=>d.total))||1;
+  const minT=Math.min(...data.map(d=>d.total));
+  const range=maxT-minT||1;
+  const pts=data.map((d,i)=>({x:pad.l+(i/(data.length-1||1))*w, yt:pad.t+(1-(d.total-minT)/range)*h, yn:pad.t+(1-(d.nw-minT)/range)*h}));
+  const totalLine=pts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.yt.toFixed(1)).join(" ");
+  const maxN=Math.max(...data.map(d=>d.nw))||1;
+  const minN=Math.min(...data.map(d=>d.nw));
+  const rangeN=maxN-minN||1;
+  const nPts=data.map((d,i)=>({x:pad.l+(i/(data.length-1||1))*w, y:pad.t+(1-(d.nw-minN)/rangeN)*h}));
+  const newLine=nPts.map((p,i)=>(i===0?"M":"L")+p.x.toFixed(1)+","+p.y.toFixed(1)).join(" ");
+  return React.createElement("svg",{width:"100%",height,viewBox:`0 0 ${width} ${height}`,style:{display:"block"}},
+    React.createElement("path",{d:totalLine,fill:"none",stroke:"#2e6e48",strokeWidth:2}),
+    pts.map((p,i)=>React.createElement("circle",{key:"t"+i,cx:p.x,cy:p.yt,r:1.5,fill:"#2e6e48"})),
+    React.createElement("path",{d:newLine,fill:"none",stroke:"#c4501a",strokeWidth:1.5,strokeDasharray:"4 2"}),
+    nPts.map((p,i)=>React.createElement("circle",{key:"n"+i,cx:p.x,cy:p.y,r:1,fill:"#c4501a"})),
+    data.map((d,i)=>React.createElement("text",{key:"l"+i,x:pad.l+(i/(data.length-1||1))*w,y:height-2,textAnchor:"middle",fontSize:8,fill:"#a09080",fontFamily:"DM Sans"},d.d))
+  );
+}
+function MiniBarChart({data, width=300, height=70}) {
+  if(!data||!data.length) return null;
+  const pad={t:4,r:4,b:18,l:4};
+  const w=width-pad.l-pad.r, h=height-pad.t-pad.b;
+  const maxN=Math.max(...data.map(d=>d.n))||1;
+  const barW=w/data.length*0.7;
+  const gap=w/data.length*0.3;
+  const fills=["#9a8e70","#8a7e60","#7a6e50","#6a5e40","#5a4e30"];
+  return React.createElement("svg",{width:"100%",height,viewBox:`0 0 ${width} ${height}`,style:{display:"block"}},
+    data.map((d,i)=>{
+      const bh=(d.n/maxN)*h;
+      const x=pad.l+i*(barW+gap)+gap/2;
+      const y=pad.t+h-bh;
+      return React.createElement("g",{key:i},
+        React.createElement("rect",{x,y,width:barW,height:bh,rx:2,fill:fills[i%fills.length]}),
+        React.createElement("text",{x:x+barW/2,y:height-2,textAnchor:"middle",fontSize:7,fill:"#a09080",fontFamily:"DM Sans"},d.r)
+      );
+    })
+  );
+}
 
 const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","eBay":"#a07818","1stDibs":"#5c1a1a"};
 const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
@@ -430,26 +471,11 @@ function App(){
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
           <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"8px 10px"}}>
             <div style={{fontFamily:"var(--s)",fontSize:8.5,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:5}}>Trend</div>
-            <ResponsiveContainer width="100%" height={70}>
-              <LineChart data={HISTORY}>
-                <XAxis dataKey="d" tick={{fontSize:8,fill:"#a09080",fontFamily:"DM Sans"}} axisLine={false} tickLine={false}/>
-                <YAxis hide domain={["dataMin-2","dataMax+2"]}/>
-                <Tooltip contentStyle={{fontFamily:"DM Sans",fontSize:10,border:"1px solid #d4c9a8",borderRadius:3,background:"#faf6ec"}}/>
-                <Line type="monotone" dataKey="total" stroke="#2e6e48" strokeWidth={2} dot={{r:1.5,fill:"#2e6e48"}} name="Total"/>
-                <Line type="monotone" dataKey="nw" stroke="#c4501a" strokeWidth={1.5} dot={{r:1,fill:"#c4501a"}} strokeDasharray="4 2" name="New"/>
-              </LineChart>
-            </ResponsiveContainer>
+            <MiniLineChart data={HISTORY}/>
           </div>
           <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"8px 10px"}}>
             <div style={{fontFamily:"var(--s)",fontSize:8.5,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:5}}>Prices</div>
-            <ResponsiveContainer width="100%" height={70}>
-              <BarChart data={priceBuckets}>
-                <XAxis dataKey="r" tick={{fontSize:7,fill:"#a09080",fontFamily:"DM Sans"}} axisLine={false} tickLine={false}/>
-                <YAxis hide/>
-                <Tooltip contentStyle={{fontFamily:"DM Sans",fontSize:10,border:"1px solid #d4c9a8",borderRadius:3,background:"#faf6ec"}}/>
-                <Bar dataKey="n" radius={[2,2,0,0]} name="Listings">{priceBuckets.map((_,i)=><Cell key={i} fill={["#9a8e70","#8a7e60","#7a6e50","#6a5e40","#5a4e30"][i]}/>)}</Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <MiniBarChart data={priceBuckets}/>
           </div>
         </div>
 
