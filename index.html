@@ -31,6 +31,7 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { max-width: 100vw; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   font-family: var(--g);
@@ -77,11 +78,13 @@ input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
 }
 @media (max-width: 640px) {
   .listings-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px;
+    width: 100% !important;
   }
-  .listing-card { font-size: 0.85em; overflow: hidden; }
-  .listing-card * { min-width: 0; }
+  .listing-card { font-size: 0.85em; overflow: hidden; max-width: 100%; }
+  .listing-card * { min-width: 0 !important; max-width: 100%; }
+  .card-wrap { overflow: hidden; min-width: 0; }
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
@@ -381,7 +384,7 @@ function ListingCard({listing:l,onImage,onDetail,index}){
             {l.ends_at&&l.ends_at>new Date().toISOString()&&l.ends_at<=new Date(Date.now()+86400000).toISOString()&&<span style={{display:"inline-block",fontSize:9,color:"#d4820a",border:"1px solid #d4820a35",background:"#d4820a08",padding:"1.5px 5px",borderRadius:2,lineHeight:"15px"}}>⏰</span>}
             {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
           </div>
-          <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap"}}>{fmtF(l.price)}</div>
+          <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{fmt(l.price)}</div>
         </div>
         <h3 style={{fontFamily:"var(--g)",fontSize:13,fontWeight:400,fontStyle:"italic",margin:"0 0 4px",lineHeight:1.3}}>{l.title}</h3>
         <p style={{fontFamily:"var(--s)",fontSize:10.5,color:"var(--muted)",lineHeight:1.45,margin:"0 0 6px",
