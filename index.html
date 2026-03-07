@@ -40,6 +40,7 @@ body {
   min-height: 100dvh;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
@@ -71,13 +72,16 @@ input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 10px;
+  overflow: hidden;
+  max-width: 100%;
 }
 @media (max-width: 640px) {
   .listings-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-  .listing-card { font-size: 0.9em; }
+  .listing-card { font-size: 0.85em; overflow: hidden; }
+  .listing-card * { min-width: 0; }
 }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
@@ -373,8 +377,8 @@ function ListingCard({listing:l,onImage,onDetail,index}){
           <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
             <Badge text={l.edition} color={ED_C[l.edition]||"#888"}/>
             {l.is_new&&<Badge text="● New" color="var(--accent)"/>}
-            {l.target&&<Badge text={"★ Target"} color="#2a7a3a"/>}
-            {l.ends_at&&l.ends_at>new Date().toISOString()&&l.ends_at<=new Date(Date.now()+86400000).toISOString()&&<Badge text="⏰ Ending Soon" color="#d4820a"/>}
+            {l.target&&<span style={{display:"inline-block",fontSize:9,color:"#2a7a3a",border:"1px solid #2a7a3a35",background:"#2a7a3a08",padding:"1.5px 5px",borderRadius:2,lineHeight:"15px"}}>★</span>}
+            {l.ends_at&&l.ends_at>new Date().toISOString()&&l.ends_at<=new Date(Date.now()+86400000).toISOString()&&<span style={{display:"inline-block",fontSize:9,color:"#d4820a",border:"1px solid #d4820a35",background:"#d4820a08",padding:"1.5px 5px",borderRadius:2,lineHeight:"15px"}}>⏰</span>}
             {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
           </div>
           <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap"}}>{fmtF(l.price)}</div>
@@ -405,6 +409,7 @@ function App(){
   const[detail,setDetail]=useState(null);
   const[filtersOpen,setFiltersOpen]=useState(false);
   const[targetOnly,setTargetOnly]=useState(false);
+  const[endingSoon,setEndingSoon]=useState(false);
 
   useEffect(()=>{
     fetch("data/listings.json?"+Date.now())
@@ -422,6 +427,7 @@ function App(){
     let r=[...LISTINGS];
     if(newOnly)r=r.filter(x=>x.is_new);
     if(targetOnly)r=r.filter(x=>x.target);
+    if(endingSoon){const n=new Date().toISOString(),n24=new Date(Date.now()+86400000).toISOString();r=r.filter(x=>x.ends_at&&x.ends_at>n&&x.ends_at<=n24);}
     if(src!=="All")r=r.filter(x=>x.source===src);
     if(ed!=="All")r=r.filter(x=>x.edition===ed);
     if(q){const s=q.toLowerCase();r=r.filter(x=>x.title.toLowerCase().includes(s)||(x.desc||"").toLowerCase().includes(s)||(x.plate&&x.plate.toString()===s));}
@@ -442,7 +448,7 @@ function App(){
     });
     if(sort==="plate")r.sort((a,b)=>(a.plate||999)-(b.plate||999));
     return r;
-  },[LISTINGS,newOnly,targetOnly,src,ed,sort,q]);
+  },[LISTINGS,newOnly,targetOnly,endingSoon,src,ed,sort,q]);
 
   const newCount=LISTINGS.filter(x=>x.is_new).length;
   const srcCounts=useMemo(()=>{const c={};LISTINGS.forEach(x=>{c[x.source]=(c[x.source]||0)+1});return c;},[LISTINGS]);
@@ -508,10 +514,10 @@ function App(){
         <img src="louisiana_heron_bg.jpg" alt="" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center top",display:"block"}}/>
         <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"0 16px 10px"}}>
           <div style={{maxWidth:1100,margin:"0 auto",display:"flex",gap:6}}>
-            {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true},{l:"Ending Soon",v:endingSoonCount,s:"within 24h",e:endingSoonCount>0},
+            {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true,click:()=>{setNewOnly(!newOnly);setEndingSoon(false);}},{l:"Ending Soon",v:endingSoonCount,s:"within 24h",e:endingSoonCount>0,click:()=>{setEndingSoon(!endingSoon);setNewOnly(false);if(!endingSoon)setSort("ending-soon");}},
               {l:"Range",v:items.length?`${fmt(Math.min(...items.filter(x=>x.price).map(x=>x.price)))}–${fmt(Math.max(...items.filter(x=>x.price).map(x=>x.price)))}`:"—"}
             ].map((c,i)=>(
-              <div key={i} style={{background:"rgba(255,252,245,.8)",backdropFilter:"blur(6px)",border:"1px solid rgba(212,201,168,.5)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden"}}>
+              <div key={i} onClick={c.click||undefined} style={{background:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"rgba(90,74,46,.9)":"rgba(255,252,245,.8)",backdropFilter:"blur(6px)",border:"1px solid rgba(212,201,168,.5)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden",cursor:c.click?"pointer":"default",transition:"all .15s",color:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"#faf5e8":"inherit"}}>
                 {c.a&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"var(--accent)"}}/>}
                 {c.e&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"#d4820a"}}/>}
                 <div style={{fontSize:8.5,fontFamily:"var(--s)",letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:1}}>{c.l}</div>
