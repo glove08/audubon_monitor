@@ -46,9 +46,10 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
 input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
-button, select, input, a, [role="button"], .tap {
+button, select, input, a, .tap {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
 }
 @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
 @keyframes spin { to { transform: rotate(360deg) } }
@@ -63,7 +64,7 @@ button, select, input, a, [role="button"], .tap {
   width: 32px; height: 32px; border: 2px solid #d4c9a844;
   border-top-color: var(--faint); border-radius: 50%; animation: spin .8s linear infinite;
 }
-.listing-card { transition: all .18s ease; }
+.listing-card { }
 @media (hover: hover) {
   .card-wrap:hover .zoom-overlay { background: rgba(30,25,15,.12) !important; }
   .card-wrap:hover .zoom-label { opacity: 1 !important; }
@@ -97,6 +98,39 @@ button, select, input, a, [role="button"], .tap {
 </head>
 <body>
 <div id="root"></div>
+<script>
+// Fastclick: eliminate 300ms tap delay on mobile Safari
+// Works with React's event delegation by dispatching a real click event
+(function(){
+  if(!('ontouchstart' in window))return;
+  var startX,startY,startT,tracking=false;
+  document.addEventListener('touchstart',function(e){
+    if(e.touches.length!==1)return;
+    var t=e.touches[0];
+    startX=t.clientX;startY=t.clientY;startT=Date.now();tracking=true;
+  },{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(!tracking)return;
+    var t=e.touches[0];
+    if(Math.abs(t.clientX-startX)>10||Math.abs(t.clientY-startY)>10)tracking=false;
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(!tracking)return;tracking=false;
+    if(Date.now()-startT>250)return;
+    var t=e.changedTouches[0];
+    var el=document.elementFromPoint(t.clientX,t.clientY);
+    if(!el)return;
+    // Don't interfere with inputs/selects (they handle their own touch)
+    var tag=el.tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    // Prevent the delayed click from also firing
+    e.preventDefault();
+    // Dispatch a real MouseEvent click so React picks it up
+    var evt=new MouseEvent('click',{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY});
+    el.dispatchEvent(evt);
+  },{passive:false});
+})();
+</script>
 <div class="loading-screen" id="loader">
   <div style="font-family:var(--d);font-size:24px;font-weight:300;color:var(--text)">Audubon Print Monitor</div>
   <div class="loading-spinner"></div>
@@ -342,7 +376,7 @@ const Badge=({text,color})=>(
 );
 const Pill=({label,active,onClick,count})=>(
   <button onClick={onClick} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
-    fontFamily:"var(--s)",letterSpacing:".03em",cursor:"pointer",transition:"all .15s",
+    fontFamily:"var(--s)",letterSpacing:".03em",cursor:"pointer",
     border:active?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
     background:active?"var(--brown)":"transparent",color:active?"#faf5e8":"#6b5a3c",fontWeight:active?600:400}}>
     {label}{count!=null&&<span style={{fontSize:9,opacity:.65,background:active?"#fff2":"#5a4a2e12",padding:"0 4px",borderRadius:6}}>{count}</span>}
@@ -524,7 +558,7 @@ function App(){
             {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true,click:()=>{setNewOnly(!newOnly);setEndingSoon(false);}},{l:"Ending Soon",v:endingSoonCount,s:"within 24h",e:endingSoonCount>0,click:()=>{setEndingSoon(!endingSoon);setNewOnly(false);if(!endingSoon)setSort("ending-soon");}},
               {l:"Range",v:items.length?`${fmt(Math.min(...items.filter(x=>x.price).map(x=>x.price)))}–${fmt(Math.max(...items.filter(x=>x.price).map(x=>x.price)))}`:"—"}
             ].map((c,i)=>(
-              <div key={i} className={c.click?"tap":undefined} onClick={c.click||undefined} style={{background:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"rgba(90,74,46,.9)":"rgba(255,252,245,.8)",backdropFilter:"blur(6px)",border:"1px solid rgba(212,201,168,.5)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden",cursor:c.click?"pointer":"default",transition:"all .15s",color:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"#faf5e8":"inherit"}}>
+              <div key={i} className={c.click?"tap":undefined} onClick={c.click||undefined} style={{background:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"rgba(90,74,46,.9)":"rgba(255,252,245,.8)",backdropFilter:"blur(6px)",border:"1px solid rgba(212,201,168,.5)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden",cursor:c.click?"pointer":"default",color:c.click&&((c.a&&newOnly)||(c.e&&endingSoon))?"#faf5e8":"inherit"}}>
                 {c.a&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"var(--accent)"}}/>}
                 {c.e&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"#d4820a"}}/>}
                 <div style={{fontSize:8.5,fontFamily:"var(--s)",letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:1}}>{c.l}</div>
@@ -556,7 +590,7 @@ function App(){
             <Pill label={`Targets (${targetCount})`} active={targetOnly} onClick={()=>setTargetOnly(!targetOnly)}/>
             <button onClick={()=>setFiltersOpen(!filtersOpen)} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
               fontFamily:"var(--s)",cursor:"pointer",border:filtersOpen||af>1?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
-              background:filtersOpen?"var(--brown)":"transparent",color:filtersOpen?"#faf5e8":"#6b5a3c",transition:"all .15s"}}>
+              background:filtersOpen?"var(--brown)":"transparent",color:filtersOpen?"#faf5e8":"#6b5a3c"}}>
               Filters{af>1&&` (${af})`}<span style={{fontSize:8,transform:filtersOpen?"rotate(180deg)":"none",transition:"transform .2s"}}>▼</span>
             </button>
             <div style={{flex:1}}/>
