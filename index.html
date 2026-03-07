@@ -428,8 +428,8 @@ function App(){
     if(sort==="price-desc")r.sort((a,b)=>(b.price||0)-(a.price||0));
     if(sort==="price-asc")r.sort((a,b)=>(a.price||1e9)-(b.price||1e9));
     if(sort==="newly-listed")r.sort((a,b)=>{
-      const aDate=a.listed_at||a.first_seen||a.scraped_at||"";
-      const bDate=b.listed_at||b.first_seen||b.scraped_at||"";
+      const aDate=a.listed_at||a.scraped_at||a.first_seen||"";
+      const bDate=b.listed_at||b.scraped_at||b.first_seen||"";
       return bDate.localeCompare(aDate);
     });
     if(sort==="ending-soon")r.sort((a,b)=>{

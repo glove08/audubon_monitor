@@ -1793,6 +1793,12 @@ def scrape_ebay():
         "audubon octavo",
     ]
 
+    # Separate auction-specific query to catch ending-soon items
+    auction_queries = [
+        "audubon birds america print",
+        "audubon octavo print",
+    ]
+
     headers = {
         "Authorization": f"Bearer {token}",
         "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
@@ -1900,8 +1906,8 @@ def scrape_ebay():
                 desc = " · ".join(desc_parts)
 
                 # Capture dates from eBay API
-                item_end = item.get("itemEndDate", None)
-                item_created = item.get("itemCreationDate", None)
+                item_end = item.get("itemEndDate") or None
+                item_created = item.get("itemCreationDate") or None
 
                 seen_urls.add(item_url)
                 listings.append(make_listing(
@@ -1922,6 +1928,95 @@ def scrape_ebay():
 
         print(f"  [OK] API '{query}': {query_count} listings")
         time.sleep(0.3)
+
+    # Pass 2: Auction-specific queries (ending soonest) to capture items with end dates
+    auction_count = 0
+    for query in auction_queries:
+        offset = 0
+        while offset < 200:
+            params = {
+                "q": query,
+                "limit": 200,
+                "offset": offset,
+                "filter": f"price:[{EBAY_PRICE_FLOOR}..],priceCurrency:USD,buyingOptions:{{AUCTION}}",
+                "sort": "endingSoonest",
+                "fieldgroups": "EXTENDED",
+            }
+            try:
+                resp = requests.get(
+                    "https://api.ebay.com/buy/browse/v1/item_summary/search",
+                    headers=headers, params=params, timeout=20,
+                )
+            except Exception as e:
+                print(f"  [!] eBay auction API error: {e}")
+                break
+            if resp.status_code != 200:
+                print(f"  [!] eBay auction API {resp.status_code}: {resp.text[:200]}")
+                break
+            data = resp.json()
+            items = data.get("itemSummaries", [])
+            if not items:
+                break
+            for item in items:
+                title = item.get("title", "")
+                if not title:
+                    continue
+                title_lower = title.lower()
+                if any(term in title_lower for term in EBAY_TITLE_EXCLUDE):
+                    continue
+                if is_excluded(title):
+                    continue
+                seller = item.get("seller", {})
+                seller_name = seller.get("username", "").lower()
+                if any(excl in seller_name for excl in EBAY_SELLER_EXCLUDE):
+                    continue
+                item_url = item.get("itemWebUrl", "")
+                if not item_url:
+                    continue
+                if "?" in item_url:
+                    item_url = item_url.split("?")[0]
+                if item_url in seen_urls:
+                    continue
+                price = None
+                price_data = item.get("price", {})
+                if price_data:
+                    try:
+                        price = float(price_data.get("value", 0))
+                    except (ValueError, TypeError):
+                        pass
+                if price is not None and price < EBAY_PRICE_FLOOR:
+                    continue
+                image_url = None
+                img = item.get("image", {})
+                if img:
+                    image_url = img.get("imageUrl", "")
+                thumbnails = item.get("thumbnailImages", [])
+                if thumbnails:
+                    image_url = thumbnails[0].get("imageUrl", image_url)
+                desc_parts = ["Auction"]
+                condition = item.get("condition", "")
+                if condition:
+                    desc_parts.append(condition)
+                if seller_name:
+                    desc_parts.append(f"Seller: {seller_name}")
+                desc = " \u00b7 ".join(desc_parts)
+                item_end = item.get("itemEndDate") or None
+                item_created = item.get("itemCreationDate") or None
+                seen_urls.add(item_url)
+                listings.append(make_listing(
+                    "eBay", "ebay", title, price, item_url,
+                    image_url=image_url, description=desc,
+                    listed_at=item_created, ends_at=item_end,
+                ))
+                auction_count += 1
+            total = data.get("total", 0)
+            offset += len(items)
+            if offset >= total:
+                break
+            time.sleep(0.3)
+        time.sleep(0.3)
+    if auction_count:
+        print(f"  [OK] Auction queries: {auction_count} auction listings")
 
     # Deduplicate by URL (overlap between queries)
     seen = set()
