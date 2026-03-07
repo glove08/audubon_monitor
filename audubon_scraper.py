@@ -1869,10 +1869,16 @@ def scrape_ebay():
                 if item_url in seen_urls:
                     continue
 
-                # Price
+                # Price — use currentBidPrice for auctions, then price
                 price = None
+                bid_data = item.get("currentBidPrice", {})
                 price_data = item.get("price", {})
-                if price_data:
+                if bid_data and bid_data.get("value"):
+                    try:
+                        price = float(bid_data["value"])
+                    except (ValueError, TypeError):
+                        pass
+                if price is None and price_data:
                     try:
                         price = float(price_data.get("value", 0))
                     except (ValueError, TypeError):
@@ -1978,8 +1984,14 @@ def scrape_ebay():
                 if item_url in seen_urls:
                     continue
                 price = None
+                bid_data = item.get("currentBidPrice", {})
                 price_data = item.get("price", {})
-                if price_data:
+                if bid_data and bid_data.get("value"):
+                    try:
+                        price = float(bid_data["value"])
+                    except (ValueError, TypeError):
+                        pass
+                if price is None and price_data:
                     try:
                         price = float(price_data.get("value", 0))
                     except (ValueError, TypeError):

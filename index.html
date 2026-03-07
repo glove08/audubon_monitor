@@ -46,6 +46,10 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
 input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
+* {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
 @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
 @keyframes spin { to { transform: rotate(360deg) } }
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
