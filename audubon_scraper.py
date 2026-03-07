@@ -204,7 +204,8 @@ def extract_plate_number(text):
     return None
 
 def make_listing(source, source_key, title, price, url, image_url=None, edition=None,
-                 plate_number=None, description="", available=True):
+                 plate_number=None, description="", available=True,
+                 listed_at=None, ends_at=None):
     return {
         "id": make_id(source_key, url),
         "source": source,
@@ -219,6 +220,8 @@ def make_listing(source, source_key, title, price, url, image_url=None, edition=
         "plate_number": plate_number or extract_plate_number(title),
         "description": description[:300] if description else "",
         "target": detect_target(title, description),
+        "listed_at": listed_at,
+        "ends_at": ends_at,
         "scraped_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -1895,11 +1898,17 @@ def scrape_ebay():
                     desc_parts.append(f"Seller: {seller_name}")
                 desc = " · ".join(desc_parts)
 
+                # Capture dates from eBay API
+                item_end = item.get("itemEndDate", None)
+                item_created = item.get("itemCreationDate", None)
+
                 seen_urls.add(item_url)
                 listings.append(make_listing(
                     "eBay", "ebay", title, price, item_url,
                     image_url=image_url,
                     description=desc,
+                    listed_at=item_created,
+                    ends_at=item_end,
                 ))
                 query_count += 1
 
@@ -2018,11 +2027,14 @@ def run_scraper():
 
     previous = load_previous_listings()
     previous_ids = {l["id"] for l in previous.get("listings", [])}
-    # Build price map from previous scan for change detection
+    # Build price map and first_seen map from previous scan
     previous_prices = {}
+    previous_first_seen = {}
     for l in previous.get("listings", []):
         if l.get("price") is not None:
             previous_prices[l["id"]] = l["price"]
+        if l.get("first_seen"):
+            previous_first_seen[l["id"]] = l["first_seen"]
 
     all_listings = []
     errors = []
@@ -2143,10 +2155,18 @@ def run_scraper():
     if price_changes:
         print(f"  [Price] {len(price_changes)} price change(s) detected")
 
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Set first_seen for all listings (carry forward or set to now)
+    for listing in all_listings:
+        lid = listing["id"]
+        if lid in previous_first_seen:
+            listing["first_seen"] = previous_first_seen[lid]
+        elif not listing.get("first_seen"):
+            listing["first_seen"] = now
+
     # Sort by price descending (None prices at end)
     all_listings.sort(key=lambda x: (x["price"] is None, -(x["price"] or 0)))
-
-    now = datetime.now(timezone.utc).isoformat()
 
     # Merge new price changes with historical ones (keep last 90 days)
     all_price_changes = previous.get("price_changes", [])

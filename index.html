@@ -57,14 +57,28 @@ input:focus, select:focus { outline: none; border-color: #8b6030 !important; }
   width: 32px; height: 32px; border: 2px solid #d4c9a844;
   border-top-color: var(--faint); border-radius: 50%; animation: spin .8s linear infinite;
 }
-.card-wrap:hover .zoom-overlay { background: rgba(30,25,15,.12) !important; }
-.card-wrap:hover .zoom-label { opacity: 1 !important; }
 .listing-card { transition: all .18s ease; }
-.listing-card:hover { border-color: #8b6030 !important; box-shadow: 0 3px 14px rgba(100,60,20,.09); }
-.nav-btn:hover { background: rgba(30,25,15,.7) !important; }
-.gallery-link:hover { background: rgba(255,255,255,.08) !important; }
+@media (hover: hover) {
+  .card-wrap:hover .zoom-overlay { background: rgba(30,25,15,.12) !important; }
+  .card-wrap:hover .zoom-label { opacity: 1 !important; }
+  .listing-card:hover { border-color: #8b6030 !important; box-shadow: 0 3px 14px rgba(100,60,20,.09); }
+  .nav-btn:hover { background: rgba(30,25,15,.7) !important; }
+  .gallery-link:hover { background: rgba(255,255,255,.08) !important; }
+}
 .price-scroll::-webkit-scrollbar { height: 3px; }
 .price-scroll::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+@media (max-width: 640px) {
+  .listings-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .listing-card { font-size: 0.9em; }
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -360,6 +374,7 @@ function ListingCard({listing:l,onImage,onDetail,index}){
             <Badge text={l.edition} color={ED_C[l.edition]||"#888"}/>
             {l.is_new&&<Badge text="● New" color="var(--accent)"/>}
             {l.target&&<Badge text={"★ Target"} color="#2a7a3a"/>}
+            {l.ends_at&&l.ends_at>new Date().toISOString()&&l.ends_at<=new Date(Date.now()+86400000).toISOString()&&<Badge text="⏰ Ending Soon" color="#d4820a"/>}
             {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
           </div>
           <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap"}}>{fmtF(l.price)}</div>
@@ -412,7 +427,19 @@ function App(){
     if(q){const s=q.toLowerCase();r=r.filter(x=>x.title.toLowerCase().includes(s)||(x.desc||"").toLowerCase().includes(s)||(x.plate&&x.plate.toString()===s));}
     if(sort==="price-desc")r.sort((a,b)=>(b.price||0)-(a.price||0));
     if(sort==="price-asc")r.sort((a,b)=>(a.price||1e9)-(b.price||1e9));
-    if(sort==="new")r.sort((a,b)=>(b.is_new?1:0)-(a.is_new?1:0)||(b.price||0)-(a.price||0));
+    if(sort==="newly-listed")r.sort((a,b)=>{
+      const aDate=a.listed_at||a.first_seen||a.scraped_at||"";
+      const bDate=b.listed_at||b.first_seen||b.scraped_at||"";
+      return bDate.localeCompare(aDate);
+    });
+    if(sort==="ending-soon")r.sort((a,b)=>{
+      const aEnd=a.ends_at||"";
+      const bEnd=b.ends_at||"";
+      if(!aEnd&&!bEnd)return 0;
+      if(!aEnd)return 1;
+      if(!bEnd)return -1;
+      return aEnd.localeCompare(bEnd);
+    });
     if(sort==="plate")r.sort((a,b)=>(a.plate||999)-(b.plate||999));
     return r;
   },[LISTINGS,newOnly,targetOnly,src,ed,sort,q]);
@@ -420,6 +447,9 @@ function App(){
   const newCount=LISTINGS.filter(x=>x.is_new).length;
   const srcCounts=useMemo(()=>{const c={};LISTINGS.forEach(x=>{c[x.source]=(c[x.source]||0)+1});return c;},[LISTINGS]);
   const targetCount=LISTINGS.filter(x=>x.target).length;
+  const now24=new Date(Date.now()+24*60*60*1000).toISOString();
+  const nowISO=new Date().toISOString();
+  const endingSoonCount=LISTINGS.filter(x=>x.ends_at&&x.ends_at>nowISO&&x.ends_at<=now24).length;
   const af=(src!=="All"?1:0)+(ed!=="All"?1:0)+(newOnly?1:0)+(targetOnly?1:0)+(q?1:0);
 
   if(error)return(
@@ -474,8 +504,9 @@ function App(){
         </div>
       )}
 
-      <header style={{borderBottom:"1px solid var(--border)",background:"rgba(250,246,236,.92)",backdropFilter:"blur(12px)",
-        padding:`calc(10px + var(--safe-top)) 16px 10px`,position:"sticky",top:0,zIndex:100}}>
+      <header style={{borderBottom:"1px solid var(--border)",position:"sticky",top:0,zIndex:100,overflow:"hidden",
+        backgroundImage:"url(louisiana_heron_bg.jpg)",backgroundSize:"cover",backgroundPosition:"center 30%"}}>
+        <div style={{background:"rgba(244,239,227,.88)",backdropFilter:"blur(10px)",padding:`calc(10px + var(--safe-top)) 16px 10px`}}>
         <div style={{maxWidth:1100,margin:"0 auto"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",flexWrap:"wrap",gap:6,marginBottom:10}}>
             <div>
@@ -487,17 +518,19 @@ function App(){
             </div>
           </div>
           <div style={{display:"flex",gap:6}}>
-            {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true},
+            {[{l:"Listings",v:items.length,s:`of ${LISTINGS.length}`},{l:"New",v:newCount,s:"flagged",a:true},{l:"Ending Soon",v:endingSoonCount,s:"within 24h",e:endingSoonCount>0},
               {l:"Range",v:items.length?`${fmt(Math.min(...items.filter(x=>x.price).map(x=>x.price)))}–${fmt(Math.max(...items.filter(x=>x.price).map(x=>x.price)))}`:"—"}
             ].map((c,i)=>(
               <div key={i} style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"7px 10px",flex:1,minWidth:0,position:"relative",overflow:"hidden"}}>
                 {c.a&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"var(--accent)"}}/>}
+                {c.e&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"#d4820a"}}/>}
                 <div style={{fontSize:8.5,fontFamily:"var(--s)",letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:1}}>{c.l}</div>
                 <div style={{fontSize:18,fontFamily:"var(--d)",lineHeight:1.1}}>{c.v}</div>
                 {c.s&&<div style={{fontSize:8.5,color:"var(--faint)",fontFamily:"var(--s)",marginTop:1}}>{c.s}</div>}
               </div>
             ))}
           </div>
+        </div>
         </div>
       </header>
 
@@ -518,7 +551,7 @@ function App(){
             <div style={{flex:1}}/>
             <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontFamily:"var(--s)",fontSize:10,padding:"4px 8px",border:"1px solid var(--border)",
               borderRadius:3,background:"rgba(255,252,245,.8)",color:"#6b5a3c",cursor:"pointer"}}>
-              <option value="price-desc">Price ↓</option><option value="price-asc">Price ↑</option><option value="new">New First</option><option value="plate">Plate #</option>
+              <option value="price-desc">Price ↓</option><option value="price-asc">Price ↑</option><option value="newly-listed">Newly Listed</option><option value="ending-soon">Ending Soonest</option><option value="plate">Plate #</option>
             </select>
           </div>
           {filtersOpen&&(
@@ -543,7 +576,7 @@ function App(){
           {items.length} listing{items.length!==1?"s":""}{newOnly?" (new only)":""}{targetOnly?" (targets)":""}{src!=="All"?` · ${src}`:""}{ed!=="All"?` · ${ed}`:""}
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>
+        <div className="listings-grid">
           {items.map((l,i)=><div key={l.id} className="card-wrap"><ListingCard listing={l} index={i} onImage={setGallery} onDetail={setDetail}/></div>)}
         </div>
 
