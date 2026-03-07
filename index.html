@@ -157,9 +157,9 @@ function PriceChanges({changes, onDetail, listings}) {
   );
 }
 
-const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","Invaluable":"#a07818","LiveAuctioneers":"#5c1a6e","eBay":"#e53238"};
+const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","Invaluable":"#a07818","LiveAuctioneers":"#5c1a6e","eBay":"#e53238","Seth Kaller":"#2d5a88","Ken Sanders Books":"#6b4423","Argosy Books":"#3a6b3a","Village Lights Books":"#886622","Burnside Rare Books":"#4a2a5a","James Cummins":"#225566","Donald Heald":"#663333","Max Rambod":"#335544","Old Florida Bookshop":"#cc6633"};
 const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
-const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","Invaluable":"Inv","LiveAuctioneers":"LA","eBay":"eBay"};
+const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","Invaluable":"Inv","LiveAuctioneers":"LA","eBay":"eBay","Seth Kaller":"SK","Ken Sanders Books":"KS","Argosy Books":"Argy","Village Lights Books":"VL","Burnside Rare Books":"Burn","James Cummins":"JC","Donald Heald":"DH","Max Rambod":"MR","Old Florida Bookshop":"OFB"};
 const fmt=n=>n==null?"Inquire":n>=10000?`$${(n/1000).toFixed(0)}k`:n>=1000?`$${(n/1000).toFixed(1)}k`:`$${n}`;
 const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
 
@@ -359,6 +359,7 @@ function ListingCard({listing:l,onImage,onDetail,index}){
           <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
             <Badge text={l.edition} color={ED_C[l.edition]||"#888"}/>
             {l.is_new&&<Badge text="● New" color="var(--accent)"/>}
+            {l.target&&<Badge text={"★ Target"} color="#2a7a3a"/>}
             {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
           </div>
           <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap"}}>{fmtF(l.price)}</div>
@@ -388,6 +389,7 @@ function App(){
   const[gallery,setGallery]=useState(null);
   const[detail,setDetail]=useState(null);
   const[filtersOpen,setFiltersOpen]=useState(false);
+  const[targetOnly,setTargetOnly]=useState(false);
 
   useEffect(()=>{
     fetch("data/listings.json?"+Date.now())
@@ -404,6 +406,7 @@ function App(){
   const items=useMemo(()=>{
     let r=[...LISTINGS];
     if(newOnly)r=r.filter(x=>x.is_new);
+    if(targetOnly)r=r.filter(x=>x.target);
     if(src!=="All")r=r.filter(x=>x.source===src);
     if(ed!=="All")r=r.filter(x=>x.edition===ed);
     if(q){const s=q.toLowerCase();r=r.filter(x=>x.title.toLowerCase().includes(s)||(x.desc||"").toLowerCase().includes(s)||(x.plate&&x.plate.toString()===s));}
@@ -412,11 +415,12 @@ function App(){
     if(sort==="new")r.sort((a,b)=>(b.is_new?1:0)-(a.is_new?1:0)||(b.price||0)-(a.price||0));
     if(sort==="plate")r.sort((a,b)=>(a.plate||999)-(b.plate||999));
     return r;
-  },[LISTINGS,newOnly,src,ed,sort,q]);
+  },[LISTINGS,newOnly,targetOnly,src,ed,sort,q]);
 
   const newCount=LISTINGS.filter(x=>x.is_new).length;
   const srcCounts=useMemo(()=>{const c={};LISTINGS.forEach(x=>{c[x.source]=(c[x.source]||0)+1});return c;},[LISTINGS]);
-  const af=(src!=="All"?1:0)+(ed!=="All"?1:0)+(newOnly?1:0)+(q?1:0);
+  const targetCount=LISTINGS.filter(x=>x.target).length;
+  const af=(src!=="All"?1:0)+(ed!=="All"?1:0)+(newOnly?1:0)+(targetOnly?1:0)+(q?1:0);
 
   if(error)return(
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:"100vh",padding:40,textAlign:"center"}}>
@@ -441,6 +445,7 @@ function App(){
             <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
               <Badge text={detail.edition} color={ED_C[detail.edition]||"#888"}/>
               {detail.is_new&&<Badge text="● New" color="var(--accent)"/>}
+              {detail.target&&<Badge text={`★ ${detail.target}`} color="#2a7a3a"/>}
               {detail.plate&&<span style={{fontSize:10,color:"#9a8e7b",fontFamily:"var(--s)"}}>Plate {detail.plate}</span>}
             </div>
             <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",marginBottom:4,lineHeight:1.3}}>{detail.title}</h2>
@@ -504,6 +509,7 @@ function App(){
             <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search species, plate #…" style={{
               fontFamily:"var(--s)",fontSize:11,padding:"5px 11px",border:"1px solid var(--border)",borderRadius:14,background:"rgba(255,252,245,.8)",color:"var(--text)",width:155}}/>
             <Pill label={`New (${newCount})`} active={newOnly} onClick={()=>setNewOnly(!newOnly)}/>
+            <Pill label={`Targets (${targetCount})`} active={targetOnly} onClick={()=>setTargetOnly(!targetOnly)}/>
             <button onClick={()=>setFiltersOpen(!filtersOpen)} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
               fontFamily:"var(--s)",cursor:"pointer",border:filtersOpen||af>1?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
               background:filtersOpen?"var(--brown)":"transparent",color:filtersOpen?"#faf5e8":"#6b5a3c",transition:"all .15s"}}>
@@ -534,7 +540,7 @@ function App(){
         </div>
 
         <div style={{fontFamily:"var(--s)",fontSize:10.5,color:"var(--muted)",marginBottom:8}}>
-          {items.length} listing{items.length!==1?"s":""}{newOnly?" (new only)":""}{src!=="All"?` · ${src}`:""}{ed!=="All"?` · ${ed}`:""}
+          {items.length} listing{items.length!==1?"s":""}{newOnly?" (new only)":""}{targetOnly?" (targets)":""}{src!=="All"?` · ${src}`:""}{ed!=="All"?` · ${ed}`:""}
         </div>
 
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:10}}>

@@ -82,6 +82,68 @@ def is_excluded(title, body=""):
             return True
     return False
 
+# Target species - birds you're actively looking for
+TARGET_BIRDS = [
+    ("american flamingo", ["flamingo"]),
+    ("great blue heron", ["great blue heron"]),
+    ("roseate spoonbill", ["roseate spoonbill", "spoonbill"]),
+    ("snowy heron", ["snowy heron", "white egret", "snowy egret"]),
+    ("louisiana heron", ["louisiana heron"]),
+    ("american white pelican", ["white pelican"]),
+    ("wild turkey", ["wild turkey", "great american cock", "great american hen"]),
+    ("snowy owl", ["snowy owl"]),
+    ("trumpeter swan", ["trumpeter swan"]),
+    ("whooping crane", ["whooping crane"]),
+    ("ivory-billed woodpecker", ["ivory-billed", "ivory billed"]),
+    ("carolina parrot", ["carolina parrot", "carolina parakeet"]),
+    ("bald eagle", ["bird of washington", "bald eagle"]),
+    ("great white heron", ["great white heron"]),
+    ("white heron", ["white heron"]),
+    ("brown pelican", ["brown pelican"]),
+    ("wood ibis", ["wood ibis", "wood stork"]),
+    ("pileated woodpecker", ["pileated woodpecker"]),
+    ("fish hawk", ["fish hawk", "osprey"]),
+    ("yellow-crowned night heron", ["yellow-crowned night heron", "yellow crowned night heron"]),
+    ("night heron", ["night heron", "qua bird"]),
+    ("common american swan", ["common american swan"]),
+    ("gyrfalcon", ["iceland", "jer falcon", "gyrfalcon"]),
+    ("long-billed curlew", ["long-billed curlew", "long billed curlew"]),
+    ("barn owl", ["barn owl"]),
+    ("ruby-throated hummingbird", ["ruby-throated hummingbird", "ruby throated hummingbird"]),
+    ("anna's hummingbird", ["anna's hummingbird", "annas hummingbird", "anna hummingbird"]),
+    ("american goldfinch", ["american goldfinch"]),
+    ("scarlet ibis", ["scarlet ibis"]),
+    ("purple heron", ["purple heron"]),
+    ("fork-tailed flycatcher", ["fork-tailed flycatcher", "fork tailed flycatcher"]),
+    ("baltimore oriole", ["baltimore oriole"]),
+    ("swallow-tailed hawk", ["swallow-tailed hawk", "swallow tailed hawk"]),
+    ("passenger pigeon", ["passenger pigeon"]),
+    ("northern mockingbird", ["northern mockingbird"]),
+    ("mockingbird", ["mockingbird", "mocking bird"]),
+    ("red-headed woodpecker", ["red-headed woodpecker", "red headed woodpecker"]),
+    ("belted kingfisher", ["belted kingfisher"]),
+    ("kingfisher", ["kingfisher"]),
+    ("american robin", ["american robin"]),
+    ("blue jay", ["blue jay"]),
+    ("golden eagle", ["golden eagle"]),
+    ("great horned owl", ["great horned owl"]),
+    ("summer tanager", ["summer red bird", "summer tanager"]),
+    ("scarlet tanager", ["scarlet tanager"]),
+    ("green heron", ["green heron"]),
+    ("little blue heron", ["little blue heron"]),
+    ("atlantic puffin", ["atlantic puffin", "puffin"]),
+    ("carolina dove", ["carolina dove", "carolina pigeon"]),
+]
+
+def detect_target(title, description=""):
+    """Check if listing matches a target bird. Returns target name or None."""
+    combined = (title + " " + description).lower()
+    for target_name, keywords in TARGET_BIRDS:
+        for kw in keywords:
+            if kw in combined:
+                return target_name
+    return None
+
 def make_id(source, url):
     return hashlib.md5(f"{source}:{url}".encode()).hexdigest()[:12]
 
@@ -155,6 +217,7 @@ def make_listing(source, source_key, title, price, url, image_url=None, edition=
         "edition": edition or detect_edition(title + " " + description),
         "plate_number": plate_number or extract_plate_number(title),
         "description": description[:300] if description else "",
+        "target": detect_target(title, description),
         "scraped_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -1365,6 +1428,289 @@ def _extract_la_lots(data, depth=0):
 
 
 # ============================================================
+# BIBLIOPOLIS DEALERS (shared platform: advSearchResults.php)
+# ============================================================
+
+def _fetch_with_bypass(url):
+    """Fetch a URL using bot bypass strategies."""
+    resp = None
+    if HAS_CURL_CFFI:
+        try:
+            resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
+            if resp.status_code != 200:
+                resp = None
+        except Exception:
+            resp = None
+    if not resp:
+        scraper = get_cloudscraper()
+        if scraper:
+            try:
+                resp = scraper.get(url, timeout=20)
+                if resp.status_code != 200:
+                    resp = None
+            except Exception:
+                resp = None
+    if not resp:
+        try:
+            session = requests.Session()
+            session.headers.update({
+                "User-Agent": _random_ua(),
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+            })
+            resp = session.get(url, timeout=20)
+            if resp.status_code != 200:
+                resp = None
+        except Exception:
+            resp = None
+    return resp
+
+
+def _scrape_bibliopolis(source_name, source_key, url):
+    """Generic scraper for Bibliopolis-platform rare book dealers."""
+    listings = []
+    resp = _fetch_with_bypass(url)
+    if not resp:
+        print(f"  [!] All strategies failed for {source_name}")
+        return []
+
+    soup = BeautifulSoup(resp.text, "lxml")
+    link_patterns = [
+        r'/item/',
+        r'/pages/books/',
+        r'/advSearchResults\.php.*action=detail',
+    ]
+    combined_pattern = '|'.join(link_patterns)
+    all_links = soup.find_all("a", href=re.compile(combined_pattern))
+
+    seen_hrefs = set()
+    for link in all_links:
+        href = link.get("href", "")
+        if href in seen_hrefs:
+            continue
+        seen_hrefs.add(href)
+
+        container = link
+        for _ in range(6):
+            if container.parent:
+                container = container.parent
+                ctext = container.get_text()
+                if len(ctext) > 30 and len(ctext) < 2000:
+                    break
+
+        title = link.get_text(strip=True)
+        # If link text is empty, try getting title from parent or sibling elements
+        if not title or len(title) < 3:
+            # Try container text - find first substantial text line
+            for child in container.descendants:
+                if isinstance(child, str):
+                    t = child.strip()
+                    if len(t) > 10 and not t.startswith('http') and not t.startswith('/'):
+                        title = t
+                        break
+            if not title or len(title) < 3:
+                # Try the link's title attribute
+                title = link.get("title", "")
+        if not title or len(title) < 5 or is_excluded(title):
+            continue
+        # Truncate overly long titles (container text can be huge)
+        if len(title) > 200:
+            title = title[:200]
+
+        price = None
+        price_match = re.search(r'\x24[\d,]+(?:\.\d{2})?', container.get_text())
+        if price_match:
+            price = safe_price(price_match.group())
+
+        item_url = urljoin(url, href)
+
+        img = container.find("img")
+        image_url = None
+        if img:
+            image_url = img.get("src") or img.get("data-src") or ""
+            if image_url and not image_url.startswith("http"):
+                image_url = urljoin(url, image_url)
+            if not image_url or "spacer" in image_url or "blank" in image_url:
+                image_url = None
+
+        listings.append(make_listing(
+            source_name, source_key, title, price, item_url,
+            image_url=image_url,
+        ))
+
+    seen = set()
+    deduped = []
+    for l in listings:
+        if l["url"] not in seen:
+            seen.add(l["url"])
+            deduped.append(l)
+    return deduped
+
+
+def scrape_ken_sanders():
+    print("[*] Scraping Ken Sanders Books...")
+    url = "https://www.kensandersbooks.com/advSearchResults.php?action=search&orderBy=relevance&category_id=0&keywordsField=audubon+print"
+    listings = _scrape_bibliopolis("Ken Sanders Books", "kensanders", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_argosy():
+    print("[*] Scraping Argosy Books...")
+    url = "https://www.argosybooks.com/advSearchResults.php?action=search&fromForm=1&ctype=Prints&category_id=317&authorField=audubon&keywordsField=octavo&orderBy=author&recordsLength=25"
+    listings = _scrape_bibliopolis("Argosy Books", "argosy", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_village_lights():
+    print("[*] Scraping Village Lights Books...")
+    url = "https://www.villagelightsbooks.com/advSearchResults.php?action=search&orderBy=relevance&category_id=0&keywordsField=audubon+octavo"
+    listings = _scrape_bibliopolis("Village Lights Books", "villagelights", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_burnside():
+    print("[*] Scraping Burnside Rare Books...")
+    url = "https://www.burnsiderarebooks.com/advSearchResults.php?action=search&orderBy=relevance&category_id=0&keywordsField=audubon+birds"
+    listings = _scrape_bibliopolis("Burnside Rare Books", "burnside", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_james_cummins():
+    print("[*] Scraping James Cummins Bookseller...")
+    url = "https://www.jamescumminsbookseller.com/advSearchResults.php?action=search&orderBy=relevance&category_id=0&keywordsField=audubon+birds"
+    listings = _scrape_bibliopolis("James Cummins", "jamescummins", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_donald_heald():
+    print("[*] Scraping Donald Heald...")
+    url = "https://www.donaldheald.com/prints.php?action=browse&category_id=327&orderBy=relevance&recordsLength=24&ctype=print&keywordsField=-amsterdam"
+    listings = _scrape_bibliopolis("Donald Heald", "donaldheald", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_max_rambod():
+    print("[*] Scraping Max Rambod...")
+    url = "https://www.maxrambod.com/advSearchResults.php?category_id=343&action=search&keywordsField=audubon&orderBy=relevance"
+    listings = _scrape_bibliopolis("Max Rambod", "maxrambod", url)
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+# ============================================================
+# SETH KALLER
+# ============================================================
+
+def scrape_seth_kaller():
+    print("[*] Scraping Seth Kaller...")
+    url = "https://www.sethkaller.com/search/?from_home=1&sold_status=0&signed_status=0&keywords=audubon"
+    listings = []
+    resp = _fetch_with_bypass(url)
+    if not resp:
+        print("  [!] All strategies failed for Seth Kaller")
+        return []
+    soup = BeautifulSoup(resp.text, "lxml")
+    for link in soup.find_all("a", href=re.compile(r'/item/')):
+        href = link.get("href", "")
+        title = link.get_text(strip=True)
+        if not title or len(title) < 5 or is_excluded(title):
+            continue
+        item_url = urljoin("https://www.sethkaller.com", href)
+        container = link
+        for _ in range(6):
+            if container.parent:
+                container = container.parent
+                ctext = container.get_text()
+                if len(ctext) > 20 and "\x24" in ctext:
+                    break
+        price = None
+        price_match = re.search(r'\x24[\d,]+(?:\.\d{2})?', container.get_text())
+        if price_match:
+            price = safe_price(price_match.group())
+        img = container.find("img")
+        image_url = None
+        if img:
+            image_url = img.get("src") or img.get("data-src") or ""
+            if image_url and not image_url.startswith("http"):
+                image_url = urljoin("https://www.sethkaller.com", image_url)
+        listings.append(make_listing(
+            "Seth Kaller", "sethkaller", title, price, item_url,
+            image_url=image_url,
+        ))
+    seen = set()
+    deduped = [l for l in listings if l["url"] not in seen and not seen.add(l["url"])]
+    print(f"  [OK] Found {len(deduped)} listings")
+    return deduped
+
+
+# ============================================================
+# OLD FLORIDA BOOKSHOP (Bibtopia platform)
+# ============================================================
+
+def scrape_old_florida():
+    print("[*] Scraping Old Florida Bookshop...")
+    listings = []
+    base_url = "https://www.oldfloridabookshop.com"
+    for page in range(1, 4):
+        if page == 1:
+            url = f"{base_url}/products/author/John%20James%20Audubon/birds"
+        else:
+            url = f"{base_url}/products/author/John%20James%20Audubon/birds/product_author_asc?page={page}"
+        resp = fetch_page(url)
+        if not resp:
+            break
+        soup = BeautifulSoup(resp.text, "lxml")
+        cards = soup.find_all("h4")
+        if not cards:
+            break
+        found = 0
+        for h4 in cards:
+            link = h4.find("a", href=True)
+            if not link:
+                continue
+            title = link.get_text(strip=True)
+            if not title or is_excluded(title):
+                continue
+            href = link.get("href", "")
+            item_url = urljoin(base_url, href)
+            container = h4
+            for _ in range(6):
+                if container.parent:
+                    container = container.parent
+                    ctext = container.get_text()
+                    if "\x24" in ctext and len(ctext) > 30:
+                        break
+            price = None
+            price_match = re.search(r'\x24[\d,]+(?:\.\d{2})?', container.get_text())
+            if price_match:
+                price = safe_price(price_match.group())
+            img = container.find("img")
+            image_url = None
+            if img:
+                image_url = img.get("src") or img.get("data-src") or ""
+                if image_url and not image_url.startswith("http"):
+                    image_url = urljoin(base_url, image_url)
+            listings.append(make_listing(
+                "Old Florida Bookshop", "oldflorida", title, price, item_url,
+                image_url=image_url,
+            ))
+            found += 1
+        if found == 0:
+            break
+        time.sleep(0.5)
+    seen = set()
+    deduped = [l for l in listings if l["url"] not in seen and not seen.add(l["url"])]
+    print(f"  [OK] Found {len(deduped)} listings")
+    return deduped
+
+
+# ============================================================
 # EBAY (Browse API)
 # ============================================================
 
@@ -1389,6 +1735,7 @@ EBAY_TITLE_EXCLUDE = [
     "digital download", "instant download", "printable",
     "dover", "national geographic", "peterson",
     "framed art print",
+    "1994",
 ]
 
 EBAY_PRICE_FLOOR = 17
@@ -1699,6 +2046,15 @@ def run_scraper():
             ("Old Print Shop", scrape_old_print_shop),  # already only 5 pages, fast enough
             ("Antique Audubon", scrape_antique_audubon),  # already only 2 pages, fast enough
             ("Audubon Art", scrape_audubon_art_quick),
+            ("Seth Kaller", scrape_seth_kaller),
+            ("Ken Sanders Books", scrape_ken_sanders),
+            ("Argosy Books", scrape_argosy),
+            ("Village Lights Books", scrape_village_lights),
+            ("Burnside Rare Books", scrape_burnside),
+            ("James Cummins", scrape_james_cummins),
+            ("Donald Heald", scrape_donald_heald),
+            ("Max Rambod", scrape_max_rambod),
+            ("Old Florida Bookshop", scrape_old_florida),
             ("Invaluable", scrape_invaluable),
             ("LiveAuctioneers", scrape_liveauctioneers),
             ("eBay", scrape_ebay),
@@ -1711,6 +2067,15 @@ def run_scraper():
             ("Old Print Shop", scrape_old_print_shop),
             ("Antique Audubon", scrape_antique_audubon),
             ("Audubon Art", scrape_audubon_art),
+            ("Seth Kaller", scrape_seth_kaller),
+            ("Ken Sanders Books", scrape_ken_sanders),
+            ("Argosy Books", scrape_argosy),
+            ("Village Lights Books", scrape_village_lights),
+            ("Burnside Rare Books", scrape_burnside),
+            ("James Cummins", scrape_james_cummins),
+            ("Donald Heald", scrape_donald_heald),
+            ("Max Rambod", scrape_max_rambod),
+            ("Old Florida Bookshop", scrape_old_florida),
             ("Invaluable", scrape_invaluable),
             ("LiveAuctioneers", scrape_liveauctioneers),
             ("eBay", scrape_ebay),
