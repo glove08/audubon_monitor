@@ -73,6 +73,7 @@ TITLE_EXCLUDE = [
     "john gould",
     "quadruped",
     "oppenheimer",
+    "50 best",
 ]
 
 def is_excluded(title, body=""):
