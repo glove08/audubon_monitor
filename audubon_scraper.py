@@ -11,6 +11,8 @@ import re
 import hashlib
 import time
 import random
+import base64
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse, quote_plus
@@ -247,6 +249,69 @@ def scrape_princeton_audubon():
         if page > 10:
             break
     print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_princeton_audubon_quick():
+    """Quick mode: only check newest listings on Princeton Audubon."""
+    print("[*] Scraping Princeton Audubon Prints (quick)...")
+    listings = []
+    url = "https://princetonaudubonprints.com/collections/octavo-bird-originals/products.json?page=1&limit=50&sort_by=created-descending"
+    resp = fetch_page(url)
+    if resp:
+        try:
+            data = resp.json()
+            for p in data.get("products", []):
+                title = p.get("title", "")
+                body = p.get("body_html", "")
+                if is_excluded(title, body) or not p.get("variants"):
+                    continue
+                variant = p["variants"][0]
+                price = safe_price(variant.get("price"))
+                available = variant.get("available", False)
+                image_url = p["images"][0].get("src", "") if p.get("images") else None
+                handle = p.get("handle", "")
+                product_url = f"https://princetonaudubonprints.com/products/{handle}"
+                desc_text = BeautifulSoup(body, "html.parser").get_text(strip=True) if body else ""
+                listings.append(make_listing(
+                    "Princeton Audubon", "princeton", title, price, product_url,
+                    image_url=image_url, description=desc_text, available=available
+                ))
+        except Exception as e:
+            print(f"  [!] JSON parse error: {e}")
+    print(f"  [OK] Found {len(listings)} listings (newest page)")
+    return listings
+
+
+def scrape_panteek_quick():
+    """Quick mode: only check newest Audubon listings on Panteek."""
+    print("[*] Scraping Panteek (quick)...")
+    listings = []
+    url = "https://www.panteek.com/collections/all/products.json?page=1&limit=50&sort_by=created-descending"
+    resp = fetch_page(url)
+    if resp:
+        try:
+            data = resp.json()
+            for p in data.get("products", []):
+                title = p.get("title", "")
+                body = p.get("body_html", "")
+                combined = (title + " " + body).lower()
+                if "audubon" not in combined or is_excluded(title, body) or not p.get("variants"):
+                    continue
+                variant = p["variants"][0]
+                price = safe_price(variant.get("price"))
+                available = variant.get("available", False)
+                image_url = p["images"][0].get("src", "") if p.get("images") else None
+                handle = p.get("handle", "")
+                product_url = f"https://www.panteek.com/products/{handle}"
+                desc_text = BeautifulSoup(body, "html.parser").get_text(strip=True) if body else ""
+                listings.append(make_listing(
+                    "Panteek", "panteek", title, price, product_url,
+                    image_url=image_url, description=desc_text, available=available
+                ))
+        except Exception as e:
+            print(f"  [!] JSON parse error: {e}")
+    print(f"  [OK] Found {len(listings)} listings (newest page)")
     return listings
 
 
@@ -591,6 +656,110 @@ def scrape_audubon_art():
     listings = deduped
 
     print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+def scrape_audubon_art_quick():
+    """Quick mode: only check first page of each originals category sorted by newest.
+    Catches new listings without re-scraping the full 500+ item inventory.
+    """
+    print("[*] Scraping Audubon Art (quick — newest only)...")
+    listings = []
+
+    # Only the antique originals categories, sorted by date (newest first)
+    quick_urls = [
+        "https://www.audubonart.com/product-category/john-james-audubon/birds-of-america/1st-edition-octavos-antique-originals/?orderby=date&per_page=96",
+        "https://www.audubonart.com/product-category/john-james-audubon/birds-of-america/original-havell-edition-audubon-prints/?orderby=date&per_page=96",
+        "https://www.audubonart.com/product-category/john-james-audubon/birds-of-america/bien-edition-audubon-prints/?orderby=date&per_page=96",
+    ]
+
+    # Reuse the same fetch/parse logic from the full scraper
+    def _try_cloudscraper(url):
+        scraper = get_cloudscraper()
+        if not scraper:
+            return None
+        try:
+            resp = scraper.get(url, timeout=20)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            print(f"  [!] cloudscraper failed: {e}")
+            return None
+
+    def _try_curl_cffi(url):
+        if not HAS_CURL_CFFI:
+            return None
+        try:
+            resp = curl_requests.get(url, impersonate="chrome131", timeout=20)
+            resp.raise_for_status()
+            return resp
+        except Exception as e:
+            print(f"  [!] curl_cffi failed: {e}")
+            return None
+
+    for url in quick_urls:
+        resp = None
+        for fn in [_try_cloudscraper, _try_curl_cffi]:
+            resp = fn(url)
+            if resp and resp.status_code == 200 and len(resp.text) > 1000:
+                break
+        if not resp:
+            continue
+
+        soup = BeautifulSoup(resp.text, "lxml")
+        products = soup.select("li.product, .product, .wc-block-grid__product")
+
+        for prod in products:
+            link = prod.find("a", href=re.compile(r'/product/'))
+            if not link:
+                continue
+            product_url = link.get("href", "")
+
+            title_el = prod.find("h2") or prod.find(class_=re.compile(r'product.*title|title'))
+            title = title_el.get_text(strip=True) if title_el else ""
+
+            if not title or is_excluded(title):
+                continue
+
+            price_el = prod.find(class_=re.compile(r'price'))
+            price = None
+            if price_el:
+                sale_el = price_el.find("ins")
+                if sale_el:
+                    price = safe_price(sale_el.get_text(strip=True))
+                if not price:
+                    amounts = price_el.find_all(class_=re.compile(r'amount'))
+                    if amounts:
+                        price = safe_price(amounts[-1].get_text(strip=True))
+                if not price:
+                    price = safe_price(price_el.get_text(strip=True))
+
+            img = prod.find("img")
+            image_url = None
+            if img:
+                image_url = (img.get("data-src") or img.get("data-lazy-src")
+                             or img.get("data-original") or img.get("srcset", "").split(",")[0].split(" ")[0]
+                             or img.get("src", ""))
+                if image_url and image_url.startswith("data:"):
+                    image_url = None
+
+            if title and product_url:
+                listings.append(make_listing(
+                    "Audubon Art", "audubonart", title, price, product_url,
+                    image_url=image_url
+                ))
+
+        time.sleep(0.5)
+
+    seen = set()
+    deduped = []
+    for l in listings:
+        if l["url"] not in seen:
+            seen.add(l["url"])
+            deduped.append(l)
+    listings = deduped
+
+    print(f"  [OK] Found {len(listings)} listings (newest page only)")
     return listings
 
 
@@ -1196,6 +1365,220 @@ def _extract_la_lots(data, depth=0):
 
 
 # ============================================================
+# EBAY (Browse API)
+# ============================================================
+
+# eBay API credentials — load from ebay_config.json in same directory
+EBAY_CONFIG_PATH = Path(__file__).parent / "ebay_config.json"
+
+# Sellers to exclude (known reproduction sellers)
+EBAY_SELLER_EXCLUDE = [
+    "donnasdeals4u",
+]
+
+# eBay-specific title terms that indicate junk listings
+EBAY_TITLE_EXCLUDE = [
+    "reproduction", "reprint", "repro", "replica",
+    "poster", "canvas", "giclee", "giclée",
+    "postcard", "post card", "greeting card",
+    "book ", "hardcover", "paperback", "volume",
+    "calendar", "coaster", "magnet", "ornament",
+    "t-shirt", "tshirt", "shirt", "mug", "pillow",
+    "sticker", "decal", "vinyl", "tapestry",
+    "jigsaw", "puzzle", "cross stitch",
+    "digital download", "instant download", "printable",
+    "dover", "national geographic", "peterson",
+    "framed art print",
+]
+
+EBAY_PRICE_FLOOR = 17
+
+
+def _get_ebay_token(client_id, client_secret):
+    """Get eBay Browse API application token via client_credentials grant."""
+    credentials = base64.b64encode(f"{client_id}:{client_secret}".encode()).decode()
+    resp = requests.post(
+        "https://api.ebay.com/identity/v1/oauth2/token",
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {credentials}",
+        },
+        data="grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope",
+        timeout=15,
+    )
+    if resp.status_code != 200:
+        print(f"  [!] eBay token request failed: {resp.status_code} {resp.text[:200]}")
+        return None
+    token_data = resp.json()
+    return token_data.get("access_token")
+
+
+def scrape_ebay():
+    """eBay Browse API — search for Audubon prints."""
+    print("[*] Scraping eBay...")
+
+    # Load config
+    if not EBAY_CONFIG_PATH.exists():
+        print(f"  [!] Missing {EBAY_CONFIG_PATH} — skipping eBay")
+        print(f"      Create it with: {{\"client_id\": \"...\", \"client_secret\": \"...\"}}")
+        return []
+
+    try:
+        config = json.loads(EBAY_CONFIG_PATH.read_text())
+        client_id = config["client_id"]
+        client_secret = config["client_secret"]
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"  [!] Bad ebay_config.json: {e}")
+        return []
+
+    # Get OAuth token
+    token = _get_ebay_token(client_id, client_secret)
+    if not token:
+        return []
+    print("  [OK] OAuth token acquired")
+
+    queries = [
+        "audubon birds of america print 1840",
+        "audubon octavo",
+    ]
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-EBAY-C-MARKETPLACE-ID": "EBAY_US",
+        "Content-Type": "application/json",
+    }
+
+    listings = []
+    seen_urls = set()
+
+    for query in queries:
+        offset = 0
+        query_count = 0
+        while offset < 400:  # Max 400 results per query (safety limit)
+            params = {
+                "q": query,
+                "limit": 200,
+                "offset": offset,
+                "filter": f"price:[{EBAY_PRICE_FLOOR}..],priceCurrency:USD",
+                "sort": "newlyListed",
+            }
+
+            try:
+                resp = requests.get(
+                    "https://api.ebay.com/buy/browse/v1/item_summary/search",
+                    headers=headers,
+                    params=params,
+                    timeout=20,
+                )
+            except Exception as e:
+                print(f"  [!] eBay API error: {e}")
+                break
+
+            if resp.status_code != 200:
+                print(f"  [!] eBay API {resp.status_code}: {resp.text[:200]}")
+                break
+
+            data = resp.json()
+            items = data.get("itemSummaries", [])
+            if not items:
+                break
+
+            for item in items:
+                title = item.get("title", "")
+                if not title:
+                    continue
+
+                # Skip junk
+                title_lower = title.lower()
+                if any(term in title_lower for term in EBAY_TITLE_EXCLUDE):
+                    continue
+                if is_excluded(title):
+                    continue
+
+                # Seller check
+                seller = item.get("seller", {})
+                seller_name = seller.get("username", "").lower()
+                if any(excl in seller_name for excl in EBAY_SELLER_EXCLUDE):
+                    continue
+
+                # URL
+                item_url = item.get("itemWebUrl", "")
+                if not item_url:
+                    continue
+                # Clean tracking params
+                if "?" in item_url:
+                    item_url = item_url.split("?")[0]
+                if item_url in seen_urls:
+                    continue
+
+                # Price
+                price = None
+                price_data = item.get("price", {})
+                if price_data:
+                    try:
+                        price = float(price_data.get("value", 0))
+                    except (ValueError, TypeError):
+                        pass
+                if price is not None and price < EBAY_PRICE_FLOOR:
+                    continue
+
+                # Image
+                image_url = None
+                img = item.get("image", {})
+                if img:
+                    image_url = img.get("imageUrl", "")
+
+                # Thumbnail (higher quality if available)
+                thumbnails = item.get("thumbnailImages", [])
+                if thumbnails:
+                    image_url = thumbnails[0].get("imageUrl", image_url)
+
+                # Description from metadata
+                desc_parts = []
+                buying_options = item.get("buyingOptions", [])
+                if "AUCTION" in buying_options:
+                    desc_parts.append("Auction")
+                if "FIXED_PRICE" in buying_options:
+                    desc_parts.append("Buy It Now")
+                condition = item.get("condition", "")
+                if condition:
+                    desc_parts.append(condition)
+                if seller_name:
+                    desc_parts.append(f"Seller: {seller_name}")
+                desc = " · ".join(desc_parts)
+
+                seen_urls.add(item_url)
+                listings.append(make_listing(
+                    "eBay", "ebay", title, price, item_url,
+                    image_url=image_url,
+                    description=desc,
+                ))
+                query_count += 1
+
+            # Check if more pages
+            total = data.get("total", 0)
+            offset += len(items)
+            if offset >= total:
+                break
+            time.sleep(0.3)
+
+        print(f"  [OK] API '{query}': {query_count} listings")
+        time.sleep(0.3)
+
+    # Deduplicate by URL (overlap between queries)
+    seen = set()
+    deduped = []
+    for l in listings:
+        if l["url"] not in seen:
+            seen.add(l["url"])
+            deduped.append(l)
+    listings = deduped
+
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+# ============================================================
 # CROSS-SOURCE DEDUPLICATION
 # ============================================================
 
@@ -1214,7 +1597,7 @@ def _normalize_title(title):
 
 def deduplicate_cross_source(listings):
     """Remove duplicate listings ONLY between Invaluable and LiveAuctioneers,
-    which often list the same auction lots. All dealer listings are kept as-is."""
+    which often list the same auction lots. All dealer/eBay listings are kept as-is."""
     auction_sources = {"invaluable", "liveauctioneers"}
     
     # Separate auction listings from dealer listings
@@ -1262,8 +1645,11 @@ def save_listings(data):
 
 
 def run_scraper():
+    quick_mode = "--quick" in sys.argv
+
     print("=" * 60)
-    print(f"[Audubon] Audubon Print Monitor - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    mode_label = "QUICK" if quick_mode else "FULL"
+    print(f"[Audubon] Audubon Print Monitor ({mode_label}) - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print("=" * 60)
 
     # Report available bypass libraries
@@ -1293,19 +1679,59 @@ def run_scraper():
     all_listings = []
     errors = []
 
-    scrapers = [
-        ("Princeton Audubon", scrape_princeton_audubon),
-        ("Panteek", scrape_panteek),
-        ("Old Print Shop", scrape_old_print_shop),
-        ("Antique Audubon", scrape_antique_audubon),
-        ("Audubon Art", scrape_audubon_art),
-        ("Invaluable", scrape_invaluable),
-        ("LiveAuctioneers", scrape_liveauctioneers),
-    ]
+    # Sources that support quick mode (check newest page, merge with cache)
+    cacheable_sources = {"princeton", "panteek", "oldprintshop", "antiqueaudubon", "audubonart"}
+
+    if quick_mode:
+        # Build cache of previous listings per source for merging
+        previous_by_source = {}
+        for l in previous.get("listings", []):
+            sk = l.get("source_key", "")
+            if sk in cacheable_sources:
+                previous_by_source.setdefault(sk, []).append(l)
+        cached_total = sum(len(v) for v in previous_by_source.values())
+        if cached_total:
+            print(f"[Cache] {cached_total} cached dealer listings available for merge")
+
+        scrapers = [
+            ("Princeton Audubon", scrape_princeton_audubon_quick),
+            ("Panteek", scrape_panteek_quick),
+            ("Old Print Shop", scrape_old_print_shop),  # already only 5 pages, fast enough
+            ("Antique Audubon", scrape_antique_audubon),  # already only 2 pages, fast enough
+            ("Audubon Art", scrape_audubon_art_quick),
+            ("Invaluable", scrape_invaluable),
+            ("LiveAuctioneers", scrape_liveauctioneers),
+            ("eBay", scrape_ebay),
+        ]
+    else:
+        previous_by_source = {}
+        scrapers = [
+            ("Princeton Audubon", scrape_princeton_audubon),
+            ("Panteek", scrape_panteek),
+            ("Old Print Shop", scrape_old_print_shop),
+            ("Antique Audubon", scrape_antique_audubon),
+            ("Audubon Art", scrape_audubon_art),
+            ("Invaluable", scrape_invaluable),
+            ("LiveAuctioneers", scrape_liveauctioneers),
+            ("eBay", scrape_ebay),
+        ]
 
     for name, scraper_fn in scrapers:
         try:
             results = scraper_fn()
+            # In quick mode, merge fresh results with cached inventory for cacheable sources
+            if quick_mode and results and previous_by_source:
+                source_key = results[0].get("source_key", "")
+                if source_key in cacheable_sources and source_key in previous_by_source:
+                    fresh_ids = {l["id"] for l in results}
+                    carried = 0
+                    for cached in previous_by_source[source_key]:
+                        if cached["id"] not in fresh_ids:
+                            cached["is_new"] = False
+                            results.append(cached)
+                            carried += 1
+                    if carried:
+                        print(f"  [Cache] Merged with {carried} cached {name} listings")
             all_listings.extend(results)
         except Exception as e:
             print(f"  [X] {name} failed: {e}")
