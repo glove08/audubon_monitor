@@ -1812,6 +1812,7 @@ def scrape_ebay():
                 "offset": offset,
                 "filter": f"price:[{EBAY_PRICE_FLOOR}..],priceCurrency:USD",
                 "sort": "newlyListed",
+                "fieldgroups": "EXTENDED",
             }
 
             try:
