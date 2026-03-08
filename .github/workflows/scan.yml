@@ -1,0 +1,33 @@
+name: Audubon Scan
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 lxml cloudscraper curl_cffi
+
+      - name: Create eBay config
+        run: |
+          echo '{"client_id": "${{ secrets.EBAY_CLIENT_ID }}", "client_secret": "${{ secrets.EBAY_CLIENT_SECRET }}"}' > ebay_config.json
+
+      - name: Run scraper
+        run: python audubon_scraper.py
+
+      - name: Commit and push
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add data/listings.json
+          git diff --staged --quiet || (git commit -m "Scan $(date -u '+%Y-%m-%d %H:%M UTC')" && git push)

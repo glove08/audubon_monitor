@@ -98,39 +98,7 @@ button, select, input, a, .tap {
 </head>
 <body>
 <div id="root"></div>
-<script>
-// Fastclick: eliminate 300ms tap delay on mobile Safari
-// Works with React's event delegation by dispatching a real click event
-(function(){
-  if(!('ontouchstart' in window))return;
-  var startX,startY,startT,tracking=false;
-  document.addEventListener('touchstart',function(e){
-    if(e.touches.length!==1)return;
-    var t=e.touches[0];
-    startX=t.clientX;startY=t.clientY;startT=Date.now();tracking=true;
-  },{passive:true});
-  document.addEventListener('touchmove',function(e){
-    if(!tracking)return;
-    var t=e.touches[0];
-    if(Math.abs(t.clientX-startX)>10||Math.abs(t.clientY-startY)>10)tracking=false;
-  },{passive:true});
-  document.addEventListener('touchend',function(e){
-    if(!tracking)return;tracking=false;
-    if(Date.now()-startT>250)return;
-    var t=e.changedTouches[0];
-    var el=document.elementFromPoint(t.clientX,t.clientY);
-    if(!el)return;
-    // Don't interfere with inputs/selects (they handle their own touch)
-    var tag=el.tagName;
-    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
-    // Prevent the delayed click from also firing
-    e.preventDefault();
-    // Dispatch a real MouseEvent click so React picks it up
-    var evt=new MouseEvent('click',{bubbles:true,cancelable:true,clientX:t.clientX,clientY:t.clientY});
-    el.dispatchEvent(evt);
-  },{passive:false});
-})();
-</script>
+
 <div class="loading-screen" id="loader">
   <div style="font-family:var(--d);font-size:24px;font-weight:300;color:var(--text)">Audubon Print Monitor</div>
   <div class="loading-spinner"></div>
@@ -339,16 +307,16 @@ function ImageGallery({listing,onClose}){
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(15,12,8,.94)",backdropFilter:"blur(10px)",
       display:"flex",flexDirection:"column",animation:"fadeIn .2s ease",paddingTop:"var(--safe-top)",paddingBottom:"var(--safe-bottom)"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 14px",flexShrink:0,borderBottom:"1px solid #ffffff0d"}}>
+      <button onClick={onClose} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+        width:"100%",padding:"14px 16px",background:"rgba(30,25,15,.8)",border:"none",borderBottom:"1px solid #ffffff15",
+        color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>← Back to listings</button>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 14px",flexShrink:0,borderBottom:"1px solid #ffffff0d"}}>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontFamily:"var(--g)",fontSize:13,fontStyle:"italic",color:"#d4c9a8",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{listing.title}</div>
           <div style={{fontFamily:"var(--s)",fontSize:9.5,color:"#8a7e6b",marginTop:1}}>{listing.source} · {fmtF(listing.price)}{n>1&&` · ${idx+1} of ${n}`}</div>
         </div>
-        <div style={{display:"flex",gap:6,alignItems:"center",marginLeft:10,flexShrink:0}}>
-          <a href={listing.url} target="_blank" rel="noopener noreferrer" className="gallery-link"
-            style={{fontFamily:"var(--s)",fontSize:10,color:"#a09080",textDecoration:"none",border:"1px solid #a0908040",padding:"4px 10px",borderRadius:3,transition:"background .15s"}}>View listing →</a>
-          <button onClick={onClose} style={{background:"none",border:"1px solid #a0908040",borderRadius:3,padding:"4px 10px",cursor:"pointer",color:"#a09080",fontSize:14,fontFamily:"var(--s)"}}>✕</button>
-        </div>
+        <a href={listing.url} target="_blank" rel="noopener noreferrer" className="gallery-link"
+          style={{fontFamily:"var(--s)",fontSize:10,color:"#a09080",textDecoration:"none",border:"1px solid #a0908040",padding:"4px 10px",borderRadius:3,marginLeft:10,flexShrink:0}}>View listing →</a>
       </div>
       <div style={{flex:1,position:"relative",overflow:"hidden"}}>
         {n>0?<ZoomableImage key={`${listing.id}-${idx}`} src={imgs[idx]} alt={listing.title} onSwipe={handleSwipe} isActive={true}/>:
@@ -514,37 +482,41 @@ function App(){
     <div style={{minHeight:"100vh",backgroundImage:"radial-gradient(ellipse at 15% 50%,rgba(120,70,20,.025) 0%,transparent 60%),radial-gradient(ellipse at 85% 15%,rgba(40,80,50,.025) 0%,transparent 60%)"}}>
       {gallery&&<ImageGallery listing={gallery} onClose={()=>setGallery(null)}/>}
       {detail&&!gallery&&(
-        <div onClick={()=>setDetail(null)} style={{position:"fixed",inset:0,background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",zIndex:999,
-          display:"flex",alignItems:"center",justifyContent:"center",padding:16,animation:"fadeIn .15s ease"}}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#faf6ec",border:"1px solid #c9bda0",borderRadius:5,maxWidth:480,width:"100%",
-            padding:20,animation:"fadeUp .25s ease",position:"relative",maxHeight:"90vh",overflowY:"auto"}}>
-            <button onClick={()=>setDetail(null)} style={{position:"absolute",top:8,right:10,background:"none",border:"none",fontSize:18,cursor:"pointer",color:"var(--faint)",fontFamily:"var(--s)"}}>✕</button>
-            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
-              <Badge text={detail.edition} color={ED_C[detail.edition]||"#888"}/>
-              {detail.is_new&&<Badge text="● New" color="var(--accent)"/>}
-              {detail.target&&<Badge text={`★ ${detail.target}`} color="#2a7a3a"/>}
-              {detail.plate&&<span style={{fontSize:10,color:"#9a8e7b",fontFamily:"var(--s)"}}>Plate {detail.plate}</span>}
-            </div>
-            <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",marginBottom:4,lineHeight:1.3}}>{detail.title}</h2>
-            <div style={{fontFamily:"var(--d)",fontSize:24,marginBottom:10}}>{fmtF(detail.price)}</div>
-            {detail.images?.length>0&&(
-              <div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
-                {detail.images.map((img,i)=>(
-                  <div key={i} onClick={()=>{setGallery(detail);setDetail(null);}} style={{width:64,height:64,borderRadius:3,overflow:"hidden",cursor:"pointer",
-                    border:"1px solid var(--border)",flexShrink:0,background:"#ece4d4"}}>
-                    <img src={img} alt="" referrerPolicy="no-referrer" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/></div>
-                ))}
+        <div style={{position:"fixed",inset:0,background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",zIndex:999,
+          display:"flex",flexDirection:"column",animation:"fadeIn .15s ease"}}>
+          <button onClick={()=>setDetail(null)} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,
+            width:"100%",padding:"14px 16px",background:"rgba(30,25,15,.8)",border:"none",borderBottom:"1px solid #ffffff15",
+            color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>← Back to listings</button>
+          <div style={{flex:1,overflow:"auto",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:16}}>
+            <div onClick={e=>e.stopPropagation()} style={{background:"#faf6ec",border:"1px solid #c9bda0",borderRadius:5,maxWidth:480,width:"100%",
+              padding:20,animation:"fadeUp .25s ease",position:"relative"}}>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
+                <Badge text={detail.edition} color={ED_C[detail.edition]||"#888"}/>
+                {detail.is_new&&<Badge text="● New" color="var(--accent)"/>}
+                {detail.target&&<Badge text={`★ ${detail.target}`} color="#2a7a3a"/>}
+                {detail.plate&&<span style={{fontSize:10,color:"#9a8e7b",fontFamily:"var(--s)"}}>Plate {detail.plate}</span>}
               </div>
-            )}
-            <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,flexWrap:"wrap",gap:8}}>
-              <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
-                <span style={{width:7,height:7,borderRadius:"50%",background:SRC_C[detail.source]||"#888"}}/>{detail.source}</span>
-              <div style={{display:"flex",gap:6}}>
-                {detail.images?.length>0&&<button onClick={()=>{setGallery(detail);setDetail(null);}} style={{fontFamily:"var(--s)",fontSize:11,color:"#6b5a3c",background:"none",
-                  border:"1px solid var(--border)",padding:"5px 12px",borderRadius:3,cursor:"pointer"}}>Images ({detail.images.length})</button>}
-                <a href={detail.url} target="_blank" rel="noopener noreferrer" style={{fontFamily:"var(--s)",fontSize:11,fontWeight:500,color:"#faf5e8",background:"var(--brown)",
-                  padding:"5px 12px",borderRadius:3,textDecoration:"none"}}>View listing →</a>
+              <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",marginBottom:4,lineHeight:1.3}}>{detail.title}</h2>
+              <div style={{fontFamily:"var(--d)",fontSize:24,marginBottom:10}}>{fmtF(detail.price)}</div>
+              {detail.images?.length>0&&(
+                <div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
+                  {detail.images.map((img,i)=>(
+                    <div key={i} onClick={()=>{setGallery(detail);setDetail(null);}} style={{width:64,height:64,borderRadius:3,overflow:"hidden",cursor:"pointer",
+                      border:"1px solid var(--border)",flexShrink:0,background:"#ece4d4"}}>
+                      <img src={img} alt="" referrerPolicy="no-referrer" style={{width:"100%",height:"100%",objectFit:"cover"}} onError={e=>e.target.style.display="none"}/></div>
+                  ))}
+                </div>
+              )}
+              <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,flexWrap:"wrap",gap:8}}>
+                <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
+                  <span style={{width:7,height:7,borderRadius:"50%",background:SRC_C[detail.source]||"#888"}}/>{detail.source}</span>
+                <div style={{display:"flex",gap:6}}>
+                  {detail.images?.length>0&&<button onClick={()=>{setGallery(detail);setDetail(null);}} style={{fontFamily:"var(--s)",fontSize:11,color:"#6b5a3c",background:"none",
+                    border:"1px solid var(--border)",padding:"5px 12px",borderRadius:3,cursor:"pointer"}}>Images ({detail.images.length})</button>}
+                  <a href={detail.url} target="_blank" rel="noopener noreferrer" style={{fontFamily:"var(--s)",fontSize:11,fontWeight:500,color:"#faf5e8",background:"var(--brown)",
+                    padding:"5px 12px",borderRadius:3,textDecoration:"none"}}>View listing →</a>
+                </div>
               </div>
             </div>
           </div>

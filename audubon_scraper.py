@@ -540,6 +540,8 @@ def scrape_antique_audubon():
 
             if not title or is_excluded(title):
                 continue
+            if re.search(r'\bsold\b', title, re.IGNORECASE):
+                continue
 
             price_el = prod.find(class_=re.compile(r'product-price|price'))
             price_text = price_el.get_text(strip=True) if price_el else ""
