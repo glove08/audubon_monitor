@@ -19,7 +19,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 lxml cloudscraper curl_cffi
+        run: |
+          pip install requests beautifulsoup4 lxml cloudscraper
+          pip install curl_cffi || echo "curl_cffi optional, skipping"
 
       - name: Create eBay config
         run: |
