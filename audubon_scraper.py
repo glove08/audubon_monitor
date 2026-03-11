@@ -2046,6 +2046,313 @@ def scrape_ebay():
 
 
 # ============================================================
+# ARTSY
+# ============================================================
+
+ARTSY_GRAPHQL_URL = "https://metaphysics-production.artsy.net/v2"
+
+ARTSY_QUERY = """
+query AudubonForSale($after: String) {
+  artist(id: "john-james-audubon") {
+    filterArtworksConnection(
+      first: 50
+      after: $after
+      forSale: true
+      majorPeriods: ["Early 19th Century", "Mid 19th Century"]
+      sort: "-published_at"
+    ) {
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      edges {
+        node {
+          internalID
+          slug
+          title
+          date
+          medium
+          availability
+          listPrice {
+            ... on Money {
+              major
+              currencyCode
+            }
+            ... on PriceRange {
+              minPrice { major currencyCode }
+            }
+          }
+          image {
+            url(version: "large")
+          }
+          partner {
+            name
+          }
+          href
+        }
+      }
+    }
+  }
+}
+"""
+
+
+def scrape_artsy():
+    """Artsy.net - GraphQL API filtered to Early & Mid 19th Century.
+    This server-side period filter excludes modern reprints/reproductions
+    without relying on title string matching.
+    """
+    print("[*] Scraping Artsy (Early & Mid 19th Century)...")
+    listings = []
+    after = None
+    page = 0
+    MAX_PAGES = 10
+
+    artsy_headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": _random_ua(),
+        "Origin": "https://www.artsy.net",
+        "Referer": "https://www.artsy.net/",
+    }
+
+    while True:
+        variables = {"after": after} if after else {}
+        try:
+            resp = requests.post(
+                ARTSY_GRAPHQL_URL,
+                headers=artsy_headers,
+                json={"query": ARTSY_QUERY, "variables": variables},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            print(f"  [!] Artsy GraphQL error (page {page + 1}): {e}")
+            break
+
+        connection = (
+            data.get("data", {})
+                .get("artist", {})
+                .get("filterArtworksConnection", {})
+        )
+        edges = connection.get("edges", [])
+        page_info = connection.get("pageInfo", {})
+
+        for edge in edges:
+            node = edge.get("node", {})
+            if not node:
+                continue
+
+            title = node.get("title") or ""
+            medium = node.get("medium") or ""
+            date_str = node.get("date") or ""
+
+            if is_excluded(title, medium):
+                continue
+
+            url = "https://www.artsy.net" + node.get("href", "")
+
+            # Parse price (Money or PriceRange union)
+            price = None
+            currency = "USD"
+            price_raw = node.get("listPrice")
+            if price_raw:
+                if "major" in price_raw:
+                    try:
+                        price = float(price_raw["major"])
+                    except (TypeError, ValueError):
+                        pass
+                    currency = price_raw.get("currencyCode", "USD")
+                elif "minPrice" in price_raw:
+                    try:
+                        price = float(price_raw["minPrice"]["major"])
+                    except (TypeError, ValueError):
+                        pass
+                    currency = price_raw["minPrice"].get("currencyCode", "USD")
+
+            image_url = None
+            img = node.get("image")
+            if img:
+                image_url = img.get("url")
+
+            partner_name = None
+            partner = node.get("partner")
+            if partner:
+                partner_name = partner.get("name")
+
+            source_label = f"Artsy ({partner_name})" if partner_name else "Artsy"
+
+            description_parts = [p for p in [medium, date_str] if p]
+            description = " | ".join(description_parts)
+
+            listing = make_listing(
+                source_label, "artsy", title, price, url,
+                image_url=image_url,
+                description=description,
+                available=(node.get("availability") == "for sale"),
+            )
+            listing["currency"] = currency
+            listings.append(listing)
+
+        page += 1
+        if not page_info.get("hasNextPage") or page >= MAX_PAGES:
+            break
+        after = page_info.get("endCursor")
+        time.sleep(0.3)
+
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+# ============================================================
+# SUSAN RHEIN
+# ============================================================
+
+def scrape_susan_rhein():
+    """SusanRhein.com - Multiple galleries covering 1st Ed Octavo, Bien, and Havell.
+
+    Galleries scraped:
+      Octavo_1stEd_P1..P10  - original 1st Ed gallery (FIRST-XXX item IDs)
+      FORMgallery1..1d      - additional 1st Ed gallery (1-XX item IDs, 5 pages)
+      Bien_Gallery          - Bien edition (B-XX item IDs, 1 page)
+      Havell_Gallery        - Havell edition (H-XX item IDs, 1 page, may 404)
+
+    Skips Sold items. Includes "Inquire for Price" with price=None.
+    Upgrades _M.jpg thumbnails to _L.jpg for higher resolution.
+    """
+    print("[*] Scraping Susan Rhein...")
+    listings = []
+    base_url = "https://susanrhein.com"
+    seen_ids = set()
+
+    # Define all gallery sections: (list of page URLs, edition label)
+    galleries = [
+        # Original 1st Ed octavo gallery — 10 pages
+        (
+            [f"{base_url}/Octavo_1stEd_P{n}.htm" for n in range(1, 11)],
+            "Octavo 1st Ed",
+        ),
+        # FORMgallery — additional 1st Ed stock, 5 pages
+        (
+            [
+                f"{base_url}/FORMgallery1.htm",
+                f"{base_url}/FORMgallery1a.htm",
+                f"{base_url}/FORMgallery1b.htm",
+                f"{base_url}/FORMgallery1c.htm",
+                f"{base_url}/FORMgallery1d.htm",
+            ],
+            "Octavo 1st Ed",
+        ),
+        # Bien edition — single page
+        (
+            [f"{base_url}/Bien_Gallery.htm"],
+            "Bien",
+        ),
+        # Havell edition — single page (may 404, handled gracefully)
+        (
+            [f"{base_url}/Havell_Gallery.htm"],
+            "Havell",
+        ),
+    ]
+
+    for page_urls, edition_label in galleries:
+        for page_url in page_urls:
+            resp = fetch_page(page_url)
+            if not resp:
+                continue
+
+            soup = BeautifulSoup(resp.text, "lxml")
+
+            for td in soup.find_all("td"):
+                text = td.get_text(separator="\n", strip=True)
+
+                # Match any item ID format Susan uses:
+                #   FIRST-001, FIRST-014-FAS  (original octavo gallery)
+                #   1-1a, 1-012-FAS, 1-20a   (FORMgallery)
+                #   B-44, B-104              (Bien)
+                #   H-1, H-22               (Havell)
+                item_match = re.search(r'Item\s+([A-Za-z0-9][\w.-]+)', text)
+                if not item_match:
+                    continue
+                item_id = item_match.group(1)
+                if item_id in seen_ids:
+                    continue
+
+                lines = [l.strip() for l in text.split("\n") if l.strip()]
+                price_line = lines[-1] if lines else ""
+
+                # Skip sold items
+                if price_line.lower() == "sold":
+                    continue
+
+                # Handle "Inquire for Price" — include with price=None
+                if "inquire" in price_line.lower():
+                    price = None
+                else:
+                    price = safe_price(price_line)
+                    # If price is None and it's not an inquire listing, it's sold/unknown — skip
+                    if price is None:
+                        continue
+
+                # Extract plate number
+                plate_match = re.search(r'Plate\s+(\d+)', text)
+                plate_number = int(plate_match.group(1)) if plate_match else None
+
+                # Build title and description from lines between item ID and price
+                desc_parts = []
+                in_title = False
+                for line in lines:
+                    if line.startswith("Item "):
+                        in_title = True
+                        continue
+                    if in_title:
+                        if (line.startswith("$") or line.lower() == "sold"
+                                or "inquire" in line.lower()):
+                            break
+                        # Skip boilerplate lines
+                        if line in ("Original Text Included", "Partial Original Text Included",
+                                    "Condition Report", "Also Available Framed"):
+                            continue
+                        desc_parts.append(line)
+
+                title = desc_parts[0] if desc_parts else ""
+                if not title or is_excluded(title):
+                    continue
+
+                # Extract image URL from ViewImage JS call, upgrade to _L.jpg
+                image_url = None
+                img_link = td.find("a", href=re.compile(r'ViewImage|javascript', re.I))
+                if not img_link:
+                    img_link = td.find("a", onclick=True)
+                if img_link:
+                    href = img_link.get("href", "") or img_link.get("onclick", "")
+                    img_match = re.search(r"ViewImage\('([^']+)'\)", href)
+                    if img_match:
+                        img_path = img_match.group(1)
+                        large_path = img_path.replace("_M.jpg", "_L.jpg")
+                        image_url = f"{base_url}/{large_path}"
+
+                # Link back to the gallery page with item ID anchor
+                page_name = page_url.split("/")[-1]
+                product_url = f"{page_url}#{item_id}"
+
+                seen_ids.add(item_id)
+                listings.append(make_listing(
+                    "Susan Rhein", "susanrhein", title, price, product_url,
+                    image_url=image_url,
+                    edition=edition_label,
+                    plate_number=plate_number,
+                    description=" | ".join(desc_parts),
+                ))
+
+            time.sleep(0.3)
+
+    print(f"  [OK] Found {len(listings)} listings")
+    return listings
+
+
+# ============================================================
 # CROSS-SOURCE DEDUPLICATION
 # ============================================================
 
@@ -2181,6 +2488,8 @@ def run_scraper():
             ("Invaluable", scrape_invaluable),
             ("LiveAuctioneers", scrape_liveauctioneers),
             ("eBay", scrape_ebay),
+            ("Artsy", scrape_artsy),
+            ("Susan Rhein", scrape_susan_rhein),
         ]
     else:
         previous_by_source = {}
@@ -2202,6 +2511,8 @@ def run_scraper():
             ("Invaluable", scrape_invaluable),
             ("LiveAuctioneers", scrape_liveauctioneers),
             ("eBay", scrape_ebay),
+            ("Artsy", scrape_artsy),
+            ("Susan Rhein", scrape_susan_rhein),
         ]
 
     for name, scraper_fn in scrapers:
