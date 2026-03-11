@@ -54,6 +54,7 @@ button, select, input, a, .tap {
 @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
 @keyframes spin { to { transform: rotate(360deg) } }
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+@keyframes slideUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
 .loading-screen {
   position: fixed; inset: 0; background: var(--bg); z-index: 9999;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
@@ -71,6 +72,7 @@ button, select, input, a, .tap {
   .listing-card:hover { border-color: #8b6030 !important; box-shadow: 0 3px 14px rgba(100,60,20,.09); }
   .nav-btn:hover { background: rgba(30,25,15,.7) !important; }
   .gallery-link:hover { background: rgba(255,255,255,.08) !important; }
+  .watch-btn:hover { background: rgba(30,25,15,.75) !important; }
 }
 .price-scroll::-webkit-scrollbar { height: 3px; }
 .price-scroll::-webkit-scrollbar-thumb { background: #c9b99a; border-radius: 3px; }
@@ -107,88 +109,154 @@ button, select, input, a, .tap {
 
 <script type="text/babel">
 const {useState,useMemo,useRef,useCallback,useEffect} = React;
-// Pure SVG charts — no external charting library needed
-function PriceChanges({changes, onDetail, listings}) {
-  if(!changes||!changes.length) return React.createElement("div",{style:{
-    background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"10px 12px",marginBottom:12}},
-    React.createElement("div",{style:{fontFamily:"var(--s)",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:6}},"Price Changes"),
-    React.createElement("div",{style:{fontFamily:"var(--s)",fontSize:11,color:"var(--faint)",fontStyle:"italic"}},"No price changes detected yet — changes appear after multiple scans")
+
+/* ═══ CONSTANTS ═══ */
+const ARTSY_COLOR="#2a4a6e";
+const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","Invaluable":"#a07818","LiveAuctioneers":"#5c1a6e","eBay":"#e53238","Seth Kaller":"#2d5a88","Ken Sanders Books":"#6b4423","Argosy Books":"#3a6b3a","Village Lights Books":"#886622","Burnside Rare Books":"#4a2a5a","James Cummins":"#225566","Donald Heald":"#663333","Max Rambod":"#335544","Old Florida Bookshop":"#cc6633","Susan Rhein":"#7a4a6a"};
+const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
+const ED_ABBR={"Octavo 1st Ed":"Oct 1","Octavo Later Ed":"Oct Late"};
+const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","Invaluable":"Inv","LiveAuctioneers":"LA","eBay":"eBay","Seth Kaller":"SK","Ken Sanders Books":"KS","Argosy Books":"Argy","Village Lights Books":"VL","Burnside Rare Books":"Burn","James Cummins":"JC","Donald Heald":"DH","Max Rambod":"MR","Old Florida Bookshop":"OFB","Susan Rhein":"SR"};
+const srcColor=l=>SRC_C[l.source]||(l.source_key==="artsy"?ARTSY_COLOR:"#888");
+const srcAbbr=l=>SRC_ABBR[l.source]||(l.source_key==="artsy"?"Artsy":l.source.slice(0,4));
+const fmt=n=>n==null?"Inquire":n>=10000?`$${(n/1000).toFixed(0)}k`:n>=1000?`$${(n/1000).toFixed(1)}k`:`$${n}`;
+const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
+
+/* ═══ PRICE DROPS ═══ */
+function PriceDrops({changes,onDetail,listings}){
+  const drops=useMemo(()=>(changes||[]).filter(c=>c.change<0).sort((a,b)=>Math.abs(b.change_pct)-Math.abs(a.change_pct)),[changes]);
+  const listingMap=useMemo(()=>{const m={};(listings||[]).forEach(l=>{m[l.id]=l;});return m;},[listings]);
+
+  if(!drops.length) return(
+    <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"10px 12px",marginBottom:12}}>
+      <div style={{fontFamily:"var(--s)",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)",marginBottom:6}}>Price Drops</div>
+      <div style={{fontFamily:"var(--s)",fontSize:11,color:"var(--faint)",fontStyle:"italic"}}>No price drops detected yet — drops appear after multiple scans</div>
+    </div>
   );
 
-  // Map listing IDs for click-through
-  const listingMap = {};
-  (listings||[]).forEach(l => { listingMap[l.id] = l; });
-
-  const drops = changes.filter(c => c.change < 0);
-  const increases = changes.filter(c => c.change > 0);
-
-  const Card = ({c}) => {
-    const isDown = c.change < 0;
-    const color = isDown ? "#2a7a3a" : "#b83a1a";
-    const arrow = isDown ? "↓" : "↑";
-    const pct = Math.abs(c.change_pct);
-    const absDiff = Math.abs(c.change);
-    const fmtD = absDiff >= 1000 ? `$${(absDiff/1000).toFixed(1)}k` : `$${absDiff}`;
-    const fmtP = c.price >= 1000 ? `$${(c.price/1000).toFixed(1)}k` : `$${c.price}`;
-    const fmtPrev = c.price_prev >= 1000 ? `$${(c.price_prev/1000).toFixed(1)}k` : `$${c.price_prev}`;
-    const fullListing = listingMap[c.id];
-
-    return React.createElement("div",{
-      onClick: () => fullListing && onDetail(fullListing),
-      style:{flexShrink:0,width:130,background:"rgba(255,252,245,.7)",border:`1px solid ${color}20`,
-        borderRadius:4,overflow:"hidden",cursor:fullListing?"pointer":"default",transition:"all .15s",position:"relative"}
-    },
-      React.createElement("div",{style:{position:"absolute",top:0,left:0,right:0,height:2,background:color,opacity:.5}}),
-      React.createElement("div",{style:{width:"100%",height:100,background:"#ece4d4",position:"relative",overflow:"hidden"}},
-        c.image_url
-          ? React.createElement("img",{src:c.image_url,alt:c.title,referrerPolicy:"no-referrer",
-              style:{width:"100%",height:"100%",objectFit:"contain",padding:3,background:"#f0e8d8"},
-              onError:e=>{e.target.style.display="none"}})
-          : React.createElement("div",{style:{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}},
-              React.createElement("svg",{width:"24",height:"24",viewBox:"0 0 24 24",fill:"none",stroke:"#b8ad96",strokeWidth:"1.2"},
-                React.createElement("rect",{x:"3",y:"3",width:"18",height:"18",rx:"2"}),
-                React.createElement("circle",{cx:"8.5",cy:"8.5",r:"1.5"}),
-                React.createElement("path",{d:"M21 15l-5-5L5 21"}))),
-        React.createElement("div",{style:{position:"absolute",top:5,right:5,background:isDown?"rgba(34,120,50,.88)":"rgba(180,50,20,.88)",
-          backdropFilter:"blur(4px)",borderRadius:8,padding:"2px 6px",
-          fontFamily:"var(--s)",fontSize:10,fontWeight:600,color:"#fff",display:"flex",alignItems:"center",gap:2}},
-          arrow," ",pct.toFixed(0),"%")
-      ),
-      React.createElement("div",{style:{padding:"6px 8px"}},
-        React.createElement("div",{style:{fontFamily:"var(--g)",fontSize:11,fontStyle:"italic",lineHeight:1.2,marginBottom:4,
-          display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden",height:"2.4em"}},c.title),
-        React.createElement("div",{style:{display:"flex",alignItems:"center",gap:3,flexWrap:"wrap"}},
-          React.createElement("span",{style:{fontFamily:"var(--s)",fontSize:10,color:"var(--muted)",textDecoration:"line-through"}},fmtPrev),
-          React.createElement("span",{style:{fontFamily:"var(--d)",fontSize:14,color,fontWeight:500}},fmtP)
-        ),
-        React.createElement("div",{style:{fontFamily:"var(--s)",fontSize:9,color,marginTop:2}},
-          arrow," ",fmtD," (",pct.toFixed(1),"%)")
-      )
-    );
-  };
-
-  return React.createElement("div",{style:{
-    background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"10px 12px",marginBottom:12}},
-    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}},
-      React.createElement("div",{style:{fontFamily:"var(--s)",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)"}},"Price Changes"),
-      React.createElement("div",{style:{fontFamily:"var(--s)",fontSize:9,color:"var(--faint)"}},
-        drops.length ? `${drops.length} drop${drops.length!==1?"s":""}` : "",
-        drops.length && increases.length ? " · " : "",
-        increases.length ? `${increases.length} increase${increases.length!==1?"s":""}` : "")
-    ),
-    React.createElement("div",{style:{display:"flex",gap:8,overflowX:"auto",paddingBottom:6,
-      scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"},className:"price-scroll"},
-      changes.sort((a,b) => Math.abs(b.change_pct) - Math.abs(a.change_pct)).map(c =>
-        React.createElement(Card, {key: c.id, c}))
-    )
+  return(
+    <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"10px 12px",marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{fontFamily:"var(--s)",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)"}}>Price Drops</div>
+        <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--faint)"}}>{drops.length} drop{drops.length!==1?"s":""}</div>
+      </div>
+      <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:6,scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}} className="price-scroll">
+        {drops.map(c=>{
+          const full=listingMap[c.id];
+          const pct=Math.abs(c.change_pct);
+          const fmtP=c.price>=1000?`$${(c.price/1000).toFixed(1)}k`:`$${c.price}`;
+          return(
+            <div key={c.id} onClick={()=>full&&onDetail(full)}
+              style={{flexShrink:0,width:110,borderRadius:4,overflow:"hidden",cursor:full?"pointer":"default",position:"relative",border:"1px solid #2a7a3a18"}}>
+              <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"#2a7a3a",opacity:.5,zIndex:1}}/>
+              <div style={{width:"100%",height:110,background:"#ece4d4",position:"relative",overflow:"hidden"}}>
+                {c.image_url
+                  ?<img src={c.image_url} alt={c.title} referrerPolicy="no-referrer"
+                      style={{width:"100%",height:"100%",objectFit:"contain",padding:3,background:"#f0e8d8"}}
+                      onError={e=>e.target.style.display="none"}/>
+                  :<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#b8ad96" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                  </div>}
+                <div style={{position:"absolute",top:5,right:5,background:"rgba(34,120,50,.88)",backdropFilter:"blur(4px)",borderRadius:8,padding:"2px 6px",fontFamily:"var(--s)",fontSize:10,fontWeight:600,color:"#fff"}}>&#8595; {pct.toFixed(0)}%</div>
+                <div style={{position:"absolute",bottom:0,left:0,right:0,background:"linear-gradient(transparent,rgba(20,16,8,.72))",padding:"14px 5px 5px",fontFamily:"var(--d)",fontSize:13,color:"#fff",fontWeight:500,textAlign:"center"}}>{fmtP}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-const SRC_C={"The Old Print Shop":"#7c5830","Princeton Audubon":"#2e6e48","Antique Audubon":"#8b3a2a","Audubon Art":"#1a5a6e","Panteek":"#6b5033","Invaluable":"#a07818","LiveAuctioneers":"#5c1a6e","eBay":"#e53238","Seth Kaller":"#2d5a88","Ken Sanders Books":"#6b4423","Argosy Books":"#3a6b3a","Village Lights Books":"#886622","Burnside Rare Books":"#4a2a5a","James Cummins":"#225566","Donald Heald":"#663333","Max Rambod":"#335544","Old Florida Bookshop":"#cc6633"};
-const ED_C={"Havell":"#9b1b30","Bien":"#5c2d82","Octavo 1st Ed":"#2a6040","Octavo Later Ed":"#7b6848","Octavo":"#5a7a3e"};
-const SRC_ABBR={"The Old Print Shop":"OPS","Princeton Audubon":"PA","Antique Audubon":"AA","Audubon Art":"AudArt","Panteek":"Pntk","Invaluable":"Inv","LiveAuctioneers":"LA","eBay":"eBay","Seth Kaller":"SK","Ken Sanders Books":"KS","Argosy Books":"Argy","Village Lights Books":"VL","Burnside Rare Books":"Burn","James Cummins":"JC","Donald Heald":"DH","Max Rambod":"MR","Old Florida Bookshop":"OFB"};
-const fmt=n=>n==null?"Inquire":n>=10000?`$${(n/1000).toFixed(0)}k`:n>=1000?`$${(n/1000).toFixed(1)}k`:`$${n}`;
-const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
+/* ═══ WATCH LIST ═══ */
+function WatchCard({l,onRemove,onDetail,onImage}){
+  const[loaded,setLoaded]=useState(false);
+  const thumb=l.images?.[0];
+  return(
+    <div style={{flexShrink:0,width:162,background:"rgba(255,252,245,.88)",border:"1px solid var(--border)",borderRadius:4,overflow:"hidden",position:"relative"}}>
+      <div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"#d4820a",opacity:.7,zIndex:2}}/>
+      <button className="watch-btn" onClick={e=>{e.stopPropagation();onRemove(l.id);}}
+        style={{position:"absolute",top:7,right:7,zIndex:3,width:24,height:24,borderRadius:"50%",border:"none",
+          background:"rgba(30,25,15,.52)",backdropFilter:"blur(4px)",cursor:"pointer",
+          display:"flex",alignItems:"center",justifyContent:"center",color:"#e8dcc8",fontSize:12,lineHeight:1,transition:"background .15s"}}>
+        &#10005;
+      </button>
+      <div onClick={()=>onImage(l)} style={{width:"100%",height:130,background:"#ece4d4",cursor:"pointer",overflow:"hidden",position:"relative"}}>
+        {thumb
+          ?<img src={thumb} alt={l.title} referrerPolicy="no-referrer"
+              onLoad={()=>setLoaded(true)}
+              style={{width:"100%",height:"100%",objectFit:"contain",padding:3,background:"#f0e8d8",opacity:loaded?1:0,transition:"opacity .3s"}}
+              onError={e=>e.target.style.display="none"}/>
+          :<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b8ad96" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </div>}
+        {!loaded&&thumb&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <div style={{width:18,height:18,border:"2px solid #d4c9a844",borderTopColor:"var(--faint)",borderRadius:"50%",animation:"spin .8s linear infinite"}}/></div>}
+      </div>
+      <div onClick={()=>onDetail(l)} style={{padding:"7px 9px 9px",cursor:"pointer"}}>
+        <div style={{fontFamily:"var(--d)",fontSize:16,lineHeight:1.1,marginBottom:3}}>{fmt(l.price)}</div>
+        <div style={{fontFamily:"var(--g)",fontSize:11,fontStyle:"italic",lineHeight:1.3,marginBottom:5,
+          display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{l.title}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
+          <span style={{fontSize:8.5,fontFamily:"var(--s)",letterSpacing:".05em",textTransform:"uppercase",
+            color:ED_C[l.edition]||"#888",border:`1px solid ${(ED_C[l.edition]||"#888")}35`,
+            background:`${(ED_C[l.edition]||"#888")}08`,padding:"1px 5px",borderRadius:2,fontWeight:600,lineHeight:"14px"}}>
+            {ED_ABBR[l.edition]||l.edition}
+          </span>
+          {l.plate&&<span style={{fontSize:8.5,color:"var(--faint)",fontFamily:"var(--s)",lineHeight:"14px"}}>Pl.{l.plate}</span>}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:4,fontSize:9,fontFamily:"var(--s)",color:"#9a8e7b"}}>
+          <span style={{width:5,height:5,borderRadius:"50%",background:srcColor(l),flexShrink:0}}/>
+          <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{l.source}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WatchList({listings,watchedIds,onRemove,onDetail,onImage}){
+  const watched=useMemo(()=>listings.filter(l=>watchedIds.has(l.id)),[listings,watchedIds]);
+  if(!watched.length) return null;
+  return(
+    <div style={{background:"rgba(255,252,245,.6)",border:"1px solid var(--border)",borderRadius:3,padding:"10px 12px",marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{fontFamily:"var(--s)",fontSize:9,letterSpacing:".08em",textTransform:"uppercase",color:"var(--muted)"}}>Watch List</div>
+        <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--faint)"}}>{watched.length} item{watched.length!==1?"s":""}</div>
+      </div>
+      <div style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:6,scrollbarWidth:"thin",WebkitOverflowScrolling:"touch"}} className="price-scroll">
+        {watched.map(l=><WatchCard key={l.id} l={l} onRemove={onRemove} onDetail={onDetail} onImage={onImage}/>)}
+      </div>
+    </div>
+  );
+}
+
+/* ═══ SCROLL TO TOP ═══ */
+function ScrollToTop(){
+  const[show,setShow]=useState(false);
+  const lastY=useRef(0);
+  useEffect(()=>{
+    const h=()=>{
+      const y=window.scrollY;
+      if(y>320&&y<lastY.current)setShow(true);
+      else if(y<=100||y>lastY.current)setShow(false);
+      lastY.current=y;
+    };
+    window.addEventListener("scroll",h,{passive:true});
+    return()=>window.removeEventListener("scroll",h);
+  },[]);
+  if(!show)return null;
+  return(
+    <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
+      style={{position:"fixed",bottom:`calc(22px + var(--safe-bottom))`,right:14,zIndex:500,
+        width:38,height:38,borderRadius:"50%",border:"1px solid var(--border)",
+        background:"rgba(250,246,236,.92)",backdropFilter:"blur(8px)",
+        boxShadow:"0 2px 14px rgba(60,40,10,.14)",cursor:"pointer",
+        display:"flex",alignItems:"center",justifyContent:"center",
+        color:"var(--brown)",fontSize:17,fontWeight:400,
+        animation:"slideUp .2s ease"}}>
+      &#8679;
+    </button>
+  );
+}
 
 /* ═══ ZOOMABLE IMAGE ═══ */
 function ZoomableImage({src,alt,onSwipe,isActive}){
@@ -309,24 +377,24 @@ function ImageGallery({listing,onClose}){
       display:"flex",flexDirection:"column",animation:"fadeIn .2s ease",paddingTop:"var(--safe-top)",paddingBottom:"var(--safe-bottom)"}}>
       <button onClick={onClose} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,
         width:"100%",padding:"14px 16px",background:"rgba(30,25,15,.8)",border:"none",borderBottom:"1px solid #ffffff15",
-        color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>← Back to listings</button>
+        color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>&#8592; Back to listings</button>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 14px",flexShrink:0,borderBottom:"1px solid #ffffff0d"}}>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontFamily:"var(--g)",fontSize:13,fontStyle:"italic",color:"#d4c9a8",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{listing.title}</div>
           <div style={{fontFamily:"var(--s)",fontSize:9.5,color:"#8a7e6b",marginTop:1}}>{listing.source} · {fmtF(listing.price)}{n>1&&` · ${idx+1} of ${n}`}</div>
         </div>
         <a href={listing.url} target="_blank" rel="noopener noreferrer" className="gallery-link"
-          style={{fontFamily:"var(--s)",fontSize:10,color:"#a09080",textDecoration:"none",border:"1px solid #a0908040",padding:"4px 10px",borderRadius:3,marginLeft:10,flexShrink:0}}>View listing →</a>
+          style={{fontFamily:"var(--s)",fontSize:10,color:"#a09080",textDecoration:"none",border:"1px solid #a0908040",padding:"4px 10px",borderRadius:3,marginLeft:10,flexShrink:0}}>View listing &#8594;</a>
       </div>
       <div style={{flex:1,position:"relative",overflow:"hidden"}}>
         {n>0?<ZoomableImage key={`${listing.id}-${idx}`} src={imgs[idx]} alt={listing.title} onSwipe={handleSwipe} isActive={true}/>:
           <div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",color:"#6b6050",fontFamily:"var(--s)"}}>No images</div>}
         {n>1&&idx>0&&<button onClick={()=>setIdx(i=>i-1)} className="nav-btn" style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",
           background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",border:"1px solid #ffffff15",borderRadius:"50%",width:38,height:38,
-          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>‹</button>}
+          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>&#8249;</button>}
         {n>1&&idx<n-1&&<button onClick={()=>setIdx(i=>i+1)} className="nav-btn" style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
           background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",border:"1px solid #ffffff15",borderRadius:"50%",width:38,height:38,
-          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>›</button>}
+          cursor:"pointer",color:"#d4c9a8",fontSize:18,display:"flex",alignItems:"center",justifyContent:"center",transition:"background .15s"}}>&#8250;</button>}
       </div>
       {n>1&&<div style={{display:"flex",justifyContent:"center",gap:6,padding:"10px 0 6px",flexShrink:0}}>
         {imgs.map((_,i)=><button key={i} onClick={()=>setIdx(i)} style={{width:i===idx?18:6,height:6,borderRadius:3,border:"none",
@@ -352,7 +420,7 @@ const Pill=({label,active,onClick,count})=>(
 );
 
 /* ═══ LISTING CARD ═══ */
-function ListingCard({listing:l,onImage,onDetail,index}){
+function ListingCard({listing:l,onImage,onDetail,onWatch,watched,index}){
   const[loaded,setLoaded]=useState(false);
   const[failed,setFailed]=useState(false);
   const thumb=l.images?.[0];const ic=l.images?.length||0;
@@ -377,27 +445,34 @@ function ListingCard({listing:l,onImage,onDetail,index}){
         {ic>1&&<div style={{position:"absolute",bottom:7,right:7,background:"rgba(30,25,15,.6)",backdropFilter:"blur(4px)",borderRadius:9,padding:"2px 7px",
           fontFamily:"var(--s)",fontSize:9,color:"#e8dcc8",display:"flex",alignItems:"center",gap:3}}>
           <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="2" y="2" width="15" height="15" rx="2"/><path d="M7 22h13a2 2 0 002-2V7"/></svg>{ic}</div>}
+        <button className="watch-btn" onClick={e=>{e.stopPropagation();onWatch(l.id);}}
+          style={{position:"absolute",top:8,left:8,zIndex:3,width:28,height:28,borderRadius:"50%",border:"none",
+            background:watched?"rgba(212,130,10,.82)":"rgba(30,25,15,.5)",backdropFilter:"blur(4px)",
+            cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:14,lineHeight:1,color:watched?"#fff":"#e8dcc8",transition:"background .15s"}}>
+          {watched?"★":"☆"}
+        </button>
         <div className="zoom-overlay" style={{position:"absolute",inset:0,background:"transparent",transition:"background .2s",pointerEvents:"none",display:"flex",alignItems:"center",justifyContent:"center"}}>
           <div className="zoom-label" style={{background:"rgba(30,25,15,.55)",borderRadius:16,padding:"4px 11px",fontFamily:"var(--s)",fontSize:10,color:"#e8dcc8",opacity:0,transition:"opacity .2s"}}>Tap to view</div>
         </div>
       </div>
       <div className="tap" onClick={()=>onDetail(l)} style={{padding:"10px 12px",cursor:"pointer"}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:6,marginBottom:5}}>
-          <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center"}}>
-            <Badge text={l.edition} color={ED_C[l.edition]||"#888"}/>
-            {l.is_new&&<Badge text="● New" color="var(--accent)"/>}
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",alignItems:"center",minWidth:0,flex:1}}>
+            <Badge text={ED_ABBR[l.edition]||l.edition} color={ED_C[l.edition]||"#888"}/>
+            {l.is_new&&<Badge text="New" color="var(--accent)"/>}
             {l.target&&<span style={{display:"inline-block",fontSize:9,color:"#2a7a3a",border:"1px solid #2a7a3a35",background:"#2a7a3a08",padding:"1.5px 5px",borderRadius:2,lineHeight:"15px"}}>★</span>}
             {l.ends_at&&l.ends_at>new Date().toISOString()&&l.ends_at<=new Date(Date.now()+86400000).toISOString()&&<span style={{display:"inline-block",fontSize:9,color:"#d4820a",border:"1px solid #d4820a35",background:"#d4820a08",padding:"1.5px 5px",borderRadius:2,lineHeight:"15px"}}>⏰</span>}
-            {l.plate&&<span style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)"}}>Pl. {l.plate}</span>}
           </div>
-          <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{fmt(l.price)}</div>
+          <div style={{fontFamily:"var(--d)",fontSize:15,color:l.price?"var(--text)":"var(--muted)",whiteSpace:"nowrap",flexShrink:0}}>{fmt(l.price)}</div>
         </div>
+        {l.plate&&<div style={{fontSize:9,color:"var(--faint)",fontFamily:"var(--s)",marginBottom:3}}>Pl. {l.plate}</div>}
         <h3 style={{fontFamily:"var(--g)",fontSize:13,fontWeight:400,fontStyle:"italic",margin:"0 0 4px",lineHeight:1.3}}>{l.title}</h3>
         <p style={{fontFamily:"var(--s)",fontSize:10.5,color:"var(--muted)",lineHeight:1.45,margin:"0 0 6px",
           display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{l.desc}</p>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span style={{display:"flex",alignItems:"center",gap:4,fontSize:10,fontFamily:"var(--s)",color:"#9a8e7b"}}>
-            <span style={{width:6,height:6,borderRadius:"50%",background:SRC_C[l.source]||"#888"}}/>{l.source}</span>
+            <span style={{width:6,height:6,borderRadius:"50%",background:srcColor(l)}}/>{l.source}</span>
           <span style={{fontSize:9,fontFamily:"var(--s)",color:"#b0a890"}}>{l.date}</span>
         </div>
       </div>
@@ -419,6 +494,19 @@ function App(){
   const[filtersOpen,setFiltersOpen]=useState(false);
   const[targetOnly,setTargetOnly]=useState(false);
   const[endingSoon,setEndingSoon]=useState(false);
+  const[watchedIds,setWatchedIds]=useState(()=>{
+    try{return new Set(JSON.parse(localStorage.getItem("audubon_watchlist")||"[]"));}
+    catch{return new Set();}
+  });
+
+  const toggleWatch=useCallback((id)=>{
+    setWatchedIds(prev=>{
+      const next=new Set(prev);
+      if(next.has(id))next.delete(id);else next.add(id);
+      try{localStorage.setItem("audubon_watchlist",JSON.stringify([...next]));}catch{}
+      return next;
+    });
+  },[]);
 
   useEffect(()=>{
     fetch("data/listings.json?"+Date.now())
@@ -480,23 +568,33 @@ function App(){
 
   return(
     <div style={{minHeight:"100vh",backgroundImage:"radial-gradient(ellipse at 15% 50%,rgba(120,70,20,.025) 0%,transparent 60%),radial-gradient(ellipse at 85% 15%,rgba(40,80,50,.025) 0%,transparent 60%)"}}>
+      <ScrollToTop/>
       {gallery&&<ImageGallery listing={gallery} onClose={()=>setGallery(null)}/>}
       {detail&&!gallery&&(
         <div style={{position:"fixed",inset:0,background:"rgba(30,25,15,.55)",backdropFilter:"blur(4px)",zIndex:999,
           display:"flex",flexDirection:"column",animation:"fadeIn .15s ease"}}>
           <button onClick={()=>setDetail(null)} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:6,
             width:"100%",padding:"14px 16px",background:"rgba(30,25,15,.8)",border:"none",borderBottom:"1px solid #ffffff15",
-            color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>← Back to listings</button>
+            color:"#d4c9a8",fontFamily:"var(--s)",fontSize:13,cursor:"pointer",flexShrink:0}}>&#8592; Back to listings</button>
           <div style={{flex:1,overflow:"auto",display:"flex",alignItems:"flex-start",justifyContent:"center",padding:16}}>
             <div onClick={e=>e.stopPropagation()} style={{background:"#faf6ec",border:"1px solid #c9bda0",borderRadius:5,maxWidth:480,width:"100%",
               padding:20,animation:"fadeUp .25s ease",position:"relative"}}>
               <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:7}}>
                 <Badge text={detail.edition} color={ED_C[detail.edition]||"#888"}/>
-                {detail.is_new&&<Badge text="● New" color="var(--accent)"/>}
-                {detail.target&&<Badge text={`★ ${detail.target}`} color="#2a7a3a"/>}
+                {detail.is_new&&<Badge text="&#9679; New" color="var(--accent)"/>}
+                {detail.target&&<Badge text={`&#9733; ${detail.target}`} color="#2a7a3a"/>}
                 {detail.plate&&<span style={{fontSize:10,color:"#9a8e7b",fontFamily:"var(--s)"}}>Plate {detail.plate}</span>}
               </div>
-              <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",marginBottom:4,lineHeight:1.3}}>{detail.title}</h2>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8,marginBottom:4}}>
+                <h2 style={{fontFamily:"var(--g)",fontSize:18,fontWeight:400,fontStyle:"italic",lineHeight:1.3,flex:1}}>{detail.title}</h2>
+                <button onClick={()=>toggleWatch(detail.id)}
+                  style={{flexShrink:0,width:32,height:32,borderRadius:"50%",border:"1px solid var(--border)",
+                    background:watchedIds.has(detail.id)?"rgba(212,130,10,.15)":"transparent",
+                    cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",
+                    fontSize:16,color:watchedIds.has(detail.id)?"#d4820a":"var(--muted)"}}>
+                  {watchedIds.has(detail.id)?"★":"☆"}
+                </button>
+              </div>
               <div style={{fontFamily:"var(--d)",fontSize:24,marginBottom:10}}>{fmtF(detail.price)}</div>
               {detail.images?.length>0&&(
                 <div style={{display:"flex",gap:5,marginBottom:12,overflowX:"auto",paddingBottom:4}}>
@@ -510,12 +608,12 @@ function App(){
               <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,flexWrap:"wrap",gap:8}}>
                 <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
-                  <span style={{width:7,height:7,borderRadius:"50%",background:SRC_C[detail.source]||"#888"}}/>{detail.source}</span>
+                  <span style={{width:7,height:7,borderRadius:"50%",background:srcColor(detail)}}/>{detail.source}</span>
                 <div style={{display:"flex",gap:6}}>
                   {detail.images?.length>0&&<button onClick={()=>{setGallery(detail);setDetail(null);}} style={{fontFamily:"var(--s)",fontSize:11,color:"#6b5a3c",background:"none",
                     border:"1px solid var(--border)",padding:"5px 12px",borderRadius:3,cursor:"pointer"}}>Images ({detail.images.length})</button>}
                   <a href={detail.url} target="_blank" rel="noopener noreferrer" style={{fontFamily:"var(--s)",fontSize:11,fontWeight:500,color:"#faf5e8",background:"var(--brown)",
-                    padding:"5px 12px",borderRadius:3,textDecoration:"none"}}>View listing →</a>
+                    padding:"5px 12px",borderRadius:3,textDecoration:"none"}}>View listing &#8594;</a>
                 </div>
               </div>
             </div>
@@ -552,7 +650,9 @@ function App(){
             {meta.last_scan&&`${new Date(meta.last_scan).toLocaleDateString("en-US",{month:"short",day:"numeric"})} · ${new Date(meta.last_scan).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}`}
           </div>
         </div>
-        <PriceChanges changes={data?.price_changes||[]} onDetail={setDetail} listings={LISTINGS}/>
+
+        <WatchList listings={LISTINGS} watchedIds={watchedIds} onRemove={toggleWatch} onDetail={setDetail} onImage={setGallery}/>
+        <PriceDrops changes={data?.price_changes||[]} onDetail={setDetail} listings={LISTINGS}/>
 
         <div style={{marginBottom:12,paddingBottom:10,borderBottom:"1px solid #e5dcc8"}}>
           <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
@@ -563,7 +663,7 @@ function App(){
             <button onClick={()=>setFiltersOpen(!filtersOpen)} style={{display:"inline-flex",alignItems:"center",gap:4,padding:"4px 10px",fontSize:10,
               fontFamily:"var(--s)",cursor:"pointer",border:filtersOpen||af>1?"1px solid var(--brown)":"1px solid #cfc4a8",borderRadius:14,
               background:filtersOpen?"var(--brown)":"transparent",color:filtersOpen?"#faf5e8":"#6b5a3c"}}>
-              Filters{af>1&&` (${af})`}<span style={{fontSize:8,transform:filtersOpen?"rotate(180deg)":"none",transition:"transform .2s"}}>▼</span>
+              Filters{af>1&&` (${af})`}<span style={{fontSize:8,transform:filtersOpen?"rotate(180deg)":"none",transition:"transform .2s"}}>&#9660;</span>
             </button>
             <div style={{flex:1}}/>
             <select value={sort} onChange={e=>setSort(e.target.value)} style={{fontFamily:"var(--s)",fontSize:10,padding:"4px 8px",border:"1px solid var(--border)",
@@ -576,7 +676,7 @@ function App(){
               <div style={{marginBottom:6}}>
                 <div style={{fontFamily:"var(--s)",fontSize:9,color:"var(--muted)",letterSpacing:".06em",textTransform:"uppercase",marginBottom:4}}>Source</div>
                 <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-                  {sources.map(s=><Pill key={s} label={s==="All"?s:(SRC_ABBR[s]||s)} active={src===s} onClick={()=>setSrc(s)} count={s==="All"?LISTINGS.length:srcCounts[s]}/>)}
+                  {sources.map(s=>{const dummy={source:s,source_key:s.toLowerCase()};return<Pill key={s} label={s==="All"?s:srcAbbr(dummy)} active={src===s} onClick={()=>setSrc(s)} count={s==="All"?LISTINGS.length:srcCounts[s]}/>;})}
                 </div>
               </div>
               <div>
@@ -594,7 +694,7 @@ function App(){
         </div>
 
         <div className="listings-grid">
-          {items.map((l,i)=><div key={l.id} className="card-wrap"><ListingCard listing={l} index={i} onImage={setGallery} onDetail={setDetail}/></div>)}
+          {items.map((l,i)=><div key={l.id} className="card-wrap"><ListingCard listing={l} index={i} onImage={setGallery} onDetail={setDetail} onWatch={toggleWatch} watched={watchedIds.has(l.id)}/></div>)}
         </div>
 
         {items.length===0&&(
