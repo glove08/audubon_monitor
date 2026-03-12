@@ -1696,7 +1696,12 @@ def scrape_old_florida():
             price_match = re.search(r'\x24[\d,]+(?:\.\d{2})?', container.get_text())
             if price_match:
                 price = safe_price(price_match.group())
-            img = container.find("img")
+            # Walk further up to find the product_list container that holds the image
+            img_container = container
+            for _ in range(4):
+                if img_container.parent:
+                    img_container = img_container.parent
+            img = img_container.find("img")
             image_url = None
             if img:
                 image_url = img.get("src") or img.get("data-src") or ""
@@ -2330,8 +2335,7 @@ def scrape_susan_rhein():
                     img_match = re.search(r"ViewImage\('([^']+)'\)", href)
                     if img_match:
                         img_path = img_match.group(1)
-                        large_path = img_path.replace("_M.jpg", "_L.jpg")
-                        image_url = f"{base_url}/{large_path}"
+                        image_url = f"{base_url}/{img_path}"
 
                 # Link back to the gallery page with item ID anchor
                 page_name = page_url.split("/")[-1]
