@@ -1,5 +1,37 @@
 [
   {
+    "id": "27f7855bdca5",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1840s Audubon Octavo Print - SPOTTED SANDPIPER - Plate 342 - Hand Colored",
+    "price": 99.99,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/177918188267",
+    "image_url": "https://i.ebayimg.com/images/g/foMAAeSweBZppqFu/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 342,
+    "target": null,
+    "disappeared_at": "2026-03-13T22:33:59.002440+00:00",
+    "event_type": "auction_ended"
+  },
+  {
+    "id": "8ff82f233038",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon's Birds of America: The Royal Octavo Edition",
+    "price": 17.9,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/187648818472",
+    "image_url": "https://i.ebayimg.com/images/g/V~gAAeSw8VZpsxoV/s-l1200.jpg",
+    "edition": "Octavo",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-13T22:33:59.002440+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "afd893b93bd2",
     "source": "eBay",
     "source_key": "ebay",
