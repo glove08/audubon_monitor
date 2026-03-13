@@ -647,9 +647,6 @@ function App(){
     catch{return new Set();}
   });
 
-  const[dismissedSales,setDismissedSales]=useState(()=>new Set());
-  const dismissSale=useCallback(id=>setDismissedSales(p=>{const n=new Set(p);n.add(id);return n;}),[]);
-
   const toggleWatch=useCallback((id)=>{
     setWatchedIds(prev=>{
       const next=new Set(prev);
@@ -811,7 +808,7 @@ function App(){
 
         <WatchList listings={LISTINGS} watchedIds={watchedIds} onRemove={toggleWatch} onDetail={setDetail} onImage={setGallery}/>
         <PriceDrops changes={data?.price_changes||[]} onDetail={setDetail} listings={LISTINGS}/>
-        <SoldHistory sales={salesData} dismissed={dismissedSales} onDismiss={dismissSale}/>
+
 
         <div style={{marginBottom:12,paddingBottom:10,borderBottom:"1px solid #e5dcc8"}}>
           <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
