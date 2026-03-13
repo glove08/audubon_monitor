@@ -480,9 +480,157 @@ function ListingCard({listing:l,onImage,onDetail,onWatch,watched,index}){
   );
 }
 
+/* ═══ PRICE HISTORY (detail panel) ═══ */
+const AUCTION_SOURCES=new Set(["liveauctioneers","invaluable","la_results"]);
+const BUYER_PREMIUM=1.28;
+
+function normT(t){
+  return(t||"")
+    .toLowerCase()
+    .replace(/\baudubon\b|\bj\.?j\.?\b|\bbirds of america\b|\boctavo\b|\b8vo\b|\bhavell\b|\bbien\b|\bplate\b|\bpl\.\b|\b1st\b|\bfirst\b|\bed\.?\b|\bedition\b|\broyal\b|\boriginal\b|\bantique\b|\bprint\b|\blithograph\b/g," ")
+    .replace(/[^a-z\s]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function titleMatch(a,b){
+  const wa=new Set(normT(a).split(" ").filter(w=>w.length>2));
+  const wb=normT(b).split(" ").filter(w=>w.length>2);
+  if(!wa.size||!wb.length)return false;
+  const hits=wb.filter(w=>wa.has(w)).length;
+  return hits>=Math.min(2,Math.ceil(Math.min(wa.size,wb.length)*0.5));
+}
+
+function matchSalesHistory(listing,sales){
+  if(!sales||!sales.length)return[];
+  return sales.filter(r=>{
+    if(r.id===listing.id)return true;
+    if(!titleMatch(r.title,listing.title))return false;
+    if(r.edition&&listing.edition&&r.edition!==listing.edition)return false;
+    return true;
+  }).sort((a,b)=>(b.disappeared_at||"").localeCompare(a.disappeared_at||""));
+}
+
+function effectivePrice(r){
+  if(!r.price)return null;
+  return AUCTION_SOURCES.has(r.source_key)?Math.round(r.price*BUYER_PREMIUM):r.price;
+}
+
+function PriceHistory({listing,sales}){
+  const matches=useMemo(()=>matchSalesHistory(listing,sales),[listing,sales]);
+  if(!matches.length)return null;
+  const withPrice=matches.filter(r=>r.price);
+  const avg=withPrice.length?Math.round(withPrice.reduce((s,r)=>s+effectivePrice(r),0)/withPrice.length):null;
+  const fmtD=d=>{try{return new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}catch{return"";}};
+  const srcShort=r=>{
+    const sk=r.source_key||"";
+    if(sk==="liveauctioneers"||sk==="la_results")return"LiveAuctioneers";
+    if(sk==="invaluable")return"Invaluable";
+    return r.source||sk;
+  };
+  const evtIcon=e=>e==="auction_ended"?"🔨":e==="sold_at_ask"?"✓":"↩";
+  return(
+    <div style={{marginTop:14,borderTop:"1px dashed #d4c9a8",paddingTop:12}}>
+      <div style={{fontFamily:"var(--s)",fontSize:9,color:"#7a8a9a",letterSpacing:".07em",textTransform:"uppercase",marginBottom:8}}>Price History</div>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        {matches.map((r,i)=>{
+          const ep=effectivePrice(r);
+          const hasPremium=AUCTION_SOURCES.has(r.source_key)&&r.price;
+          return(
+            <div key={r.id||i} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 8px",
+              background:"rgba(240,236,228,.6)",borderRadius:3,border:"1px solid #e0d8c8"}}>
+              <span style={{fontSize:10,lineHeight:1,flexShrink:0,minWidth:14,textAlign:"center"}}>{evtIcon(r.event_type)}</span>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontFamily:"var(--s)",fontSize:9.5,color:"var(--text)",fontWeight:500}}>
+                  {ep?`${ep.toLocaleString()}`:"—"}
+                  {hasPremium&&<span style={{fontFamily:"var(--s)",fontSize:7.5,color:"var(--faint)",marginLeft:4}}>incl. 28% BP</span>}
+                </div>
+                <div style={{fontFamily:"var(--s)",fontSize:8.5,color:"var(--muted)",marginTop:1}}>
+                  {srcShort(r)}
+                  {r.price_note&&r.price_note!=="listed price"&&<span style={{color:"var(--faint)",marginLeft:4}}>· {r.price_note}</span>}
+                </div>
+              </div>
+              <div style={{fontFamily:"var(--s)",fontSize:8,color:"var(--faint)",flexShrink:0}}>{fmtD(r.disappeared_at)}</div>
+            </div>
+          );
+        })}
+      </div>
+      {avg&&withPrice.length>1&&(
+        <div style={{marginTop:8,padding:"6px 8px",background:"rgba(90,74,46,.07)",borderRadius:3,
+          display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span style={{fontFamily:"var(--s)",fontSize:9,color:"var(--muted)",letterSpacing:".04em",textTransform:"uppercase"}}>Avg sale ({withPrice.length})</span>
+          <span style={{fontFamily:"var(--d)",fontSize:15,color:"var(--text)"}}>${avg.toLocaleString()}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══ SOLD HISTORY ═══ */
+function SoldHistory({sales,dismissed,onDismiss}){
+  if(!sales||sales.length===0)return null;
+  const visible=sales.filter(r=>!dismissed.has(r.id));
+  if(visible.length===0)return null;
+  const recent=visible.slice(0,24);
+  const evtLabel=e=>e==="auction_ended"?"Auction":e==="sold_at_ask"?"Sold":"Gone";
+  const evtColor=e=>e==="auction_ended"?"#3a6aa0":e==="sold_at_ask"?"#2a7a3a":"#7a6a5a";
+  const fmtD=d=>{if(!d)return"";try{return new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric"});}catch{return"";}}
+  return(
+    <div style={{marginBottom:18}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+        <div style={{width:3,height:14,background:"#4a6a8a",borderRadius:2}}/>
+        <span style={{fontFamily:"var(--s)",fontSize:10,color:"#6a7a8a",letterSpacing:".08em",textTransform:"uppercase"}}>Recently Sold / Ended</span>
+        <span style={{fontFamily:"var(--s)",fontSize:9,color:"var(--faint)"}}>({visible.length} records)</span>
+      </div>
+      <div className="price-scroll" style={{display:"flex",gap:8,overflowX:"auto",paddingBottom:6}}>
+        {recent.map((r,i)=>(
+          <div key={r.id||i} style={{flexShrink:0,width:110,position:"relative"}}>
+            <button onClick={e=>{e.preventDefault();e.stopPropagation();onDismiss(r.id);}}
+              title="Dismiss"
+              style={{position:"absolute",top:3,left:3,zIndex:10,width:18,height:18,
+                borderRadius:"50%",border:"none",background:"rgba(30,20,10,.65)",
+                color:"#fff",fontSize:10,lineHeight:1,cursor:"pointer",
+                display:"flex",alignItems:"center",justifyContent:"center",padding:0}}>&#215;</button>
+            <a href={r.url} target="_blank" rel="noopener noreferrer"
+              style={{textDecoration:"none",color:"inherit",
+                background:"rgba(240,236,228,.7)",border:"1px solid #ccc4aa",borderRadius:4,overflow:"hidden",display:"block"}}>
+              <div style={{width:"100%",height:90,background:"#e8e0d0",position:"relative"}}>
+                {r.image_url
+                  ?<img src={r.image_url} alt={r.title||""} referrerPolicy="no-referrer"
+                      style={{width:"100%",height:"100%",objectFit:"contain",padding:2,background:"#ece4d8"}}
+                      onError={e=>e.target.style.display="none"}/>
+                  :<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b8ad96" strokeWidth="1.2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>}
+                <div style={{position:"absolute",top:4,right:4,background:evtColor(r.event_type),
+                  color:"#fff",fontSize:7.5,fontFamily:"var(--s)",padding:"1.5px 5px",borderRadius:2}}>
+                  {evtLabel(r.event_type)}</div>
+                {r.target&&<div style={{position:"absolute",top:4,left:4,fontSize:9,color:"#2a7a3a"}}>★</div>}
+              </div>
+              <div style={{padding:"5px 6px"}}>
+                <div style={{fontFamily:"var(--d)",fontSize:13,marginBottom:2,color:r.price?"var(--text)":"var(--muted)"}}>
+                  {r.price?`${r.price.toLocaleString()}`:"N/A"}
+                  {r.price_note&&r.price_note!=="listed price"&&<span style={{fontFamily:"var(--s)",fontSize:7,color:"var(--faint)",marginLeft:3}}>{r.price_note}</span>}
+                </div>
+                <div style={{fontFamily:"var(--g)",fontSize:9.5,fontStyle:"italic",color:"var(--muted)",
+                  overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",
+                  lineHeight:1.3,marginBottom:3}}>{r.title}</div>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontFamily:"var(--s)",fontSize:7.5,color:"var(--faint)"}}>{ED_ABBR[r.edition]||r.edition||""}</div>
+                  <div style={{fontFamily:"var(--s)",fontSize:7.5,color:"var(--faint)"}}>{fmtD(r.disappeared_at)}</div>
+                </div>
+              </div>
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ═══ MAIN APP ═══ */
 function App(){
   const[data,setData]=useState(null);
+  const[salesData,setSalesData]=useState([]);
   const[error,setError]=useState(null);
   const[newOnly,setNewOnly]=useState(false);
   const[src,setSrc]=useState("All");
@@ -509,10 +657,16 @@ function App(){
   },[]);
 
   useEffect(()=>{
-    fetch("data/listings.json?"+Date.now())
-      .then(r=>{if(!r.ok)throw new Error("Failed");return r.json();})
-      .then(d=>{setData(d);document.getElementById("loader")?.classList.add("done");setTimeout(()=>{document.getElementById("loader")?.remove();},500);})
-      .catch(e=>{setError(e.message);document.getElementById("loader")?.classList.add("done");});
+    const ts=Date.now();
+    Promise.all([
+      fetch("data/listings.json?"+ts).then(r=>{if(!r.ok)throw new Error("Failed");return r.json();}),
+      fetch("data/sales_history.json?"+ts).then(r=>r.ok?r.json():[]).catch(()=>[])
+    ]).then(([d,s])=>{
+      setData(d);
+      setSalesData(Array.isArray(s)?s:[]);
+      document.getElementById("loader")?.classList.add("done");
+      setTimeout(()=>{document.getElementById("loader")?.remove();},500);
+    }).catch(e=>{setError(e.message);document.getElementById("loader")?.classList.add("done");});
   },[]);
 
   const LISTINGS=(data?.listings||[]).map(l=>({...l, images: l.images || (l.image_url ? [l.image_url] : [])}));
@@ -606,7 +760,8 @@ function App(){
                 </div>
               )}
               <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,flexWrap:"wrap",gap:8}}>
+              <PriceHistory listing={detail} sales={salesData}/>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,marginTop:12,flexWrap:"wrap",gap:8}}>
                 <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
                   <span style={{width:7,height:7,borderRadius:"50%",background:srcColor(detail)}}/>{detail.source}</span>
                 <div style={{display:"flex",gap:6}}>
@@ -653,6 +808,7 @@ function App(){
 
         <WatchList listings={LISTINGS} watchedIds={watchedIds} onRemove={toggleWatch} onDetail={setDetail} onImage={setGallery}/>
         <PriceDrops changes={data?.price_changes||[]} onDetail={setDetail} listings={LISTINGS}/>
+        <SoldHistory sales={salesData}/>
 
         <div style={{marginBottom:12,paddingBottom:10,borderBottom:"1px solid #e5dcc8"}}>
           <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>

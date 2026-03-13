@@ -33,6 +33,20 @@ except ImportError:
 
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
+SALES_HISTORY_PATH = DATA_DIR / "sales_history.json"
+
+def load_sales_history():
+    if SALES_HISTORY_PATH.exists():
+        try:
+            return json.loads(SALES_HISTORY_PATH.read_text())
+        except Exception:
+            pass
+    # Initialize empty file so git add data/sales_history.json never fails
+    SALES_HISTORY_PATH.write_text("[]")
+    return []
+
+def save_sales_history(records):
+    SALES_HISTORY_PATH.write_text(json.dumps(records, indent=2))
 
 # Rotate User-Agents to reduce fingerprinting
 _USER_AGENTS = [
@@ -177,14 +191,24 @@ def detect_edition(text):
         return "Havell"
     if any(x in text_lower for x in ["bien", "chromolithograph"]):
         return "Bien"
-    if any(x in text_lower for x in ["1st ed", "first ed", "1st royal", "first royal",
-                                      "1840", "1841", "1842", "1843", "1844",
-                                      "1839-1844", "1840-1844"]):
+    # First-edition octavo — check BEFORE generic octavo/8vo catch-all
+    # Covers: "1st ed", "first ed", "1st edition", "first edition",
+    #         "1st octavo", "first octavo", "1st 8vo", "first 8vo",
+    #         "1st royal", "first royal", and publication-year spans
+    if any(x in text_lower for x in [
+        "1st ed", "first ed",          # "1st edition", "first edition" both match via substring
+        "1st octavo", "first octavo",
+        "1st 8vo", "first 8vo",
+        "1st royal", "first royal",
+        "1840", "1841", "1842", "1843", "1844",
+        "1839-1844", "1840-1844",
+    ]):
         return "Octavo 1st Ed"
     if any(x in text_lower for x in ["later ed", "2nd ed", "second ed", "3rd ed",
                                       "1856", "1859", "1860", "1861", "1865", "1871"]):
         return "Octavo Later Ed"
-    if "octavo" in text_lower:
+    # Generic octavo/8vo — no edition signal found
+    if "octavo" in text_lower or "8vo" in text_lower:
         return "Octavo"
     return "Unknown"
 
@@ -1923,13 +1947,16 @@ def scrape_ebay():
                 item_created = item.get("itemCreationDate") or None
 
                 seen_urls.add(item_url)
-                listings.append(make_listing(
+                listing = make_listing(
                     "eBay", "ebay", title, price, item_url,
                     image_url=image_url,
                     description=desc,
                     listed_at=item_created,
                     ends_at=item_end,
-                ))
+                )
+                listing["buying_options"] = buying_options
+                listing["is_obo"] = "BEST_OFFER" in buying_options
+                listings.append(listing)
                 query_count += 1
 
             # Check if more pages
@@ -2022,11 +2049,14 @@ def scrape_ebay():
                 item_end = item.get("itemEndDate") or None
                 item_created = item.get("itemCreationDate") or None
                 seen_urls.add(item_url)
-                listings.append(make_listing(
+                listing = make_listing(
                     "eBay", "ebay", title, price, item_url,
                     image_url=image_url, description=desc,
                     listed_at=item_created, ends_at=item_end,
-                ))
+                )
+                listing["buying_options"] = ["AUCTION"]
+                listing["is_obo"] = False
+                listings.append(listing)
                 auction_count += 1
             total = data.get("total", 0)
             offset += len(items)
@@ -2638,6 +2668,83 @@ def run_scraper():
 
     save_listings(output)
 
+    # --- Sales History: detect disappeared listings ---
+    # Only log disappearances for sources that returned results this scan
+    # (prevents scrape failures from falsely marking listings as sold)
+    successful_source_keys = {l.get("source_key") for l in all_listings if l.get("source_key")}
+
+    current_ids_by_source = {}
+    for l in all_listings:
+        sk = l.get("source_key")
+        if sk:
+            current_ids_by_source.setdefault(sk, set()).add(l["id"])
+
+    prev_by_sk = {}
+    for l in previous.get("listings", []):
+        sk = l.get("source_key")
+        if sk:
+            prev_by_sk.setdefault(sk, {})[l["id"]] = l
+
+    sales_history = load_sales_history()
+    existing_sale_ids = {r["id"] for r in sales_history}
+    new_sales = []
+
+    for sk, prev_map in prev_by_sk.items():
+        if sk not in successful_source_keys:
+            continue  # Source failed this scan — don't log false disappearances
+
+        current_ids = current_ids_by_source.get(sk, set())
+        for lid, prev_l in prev_map.items():
+            if lid in current_ids:
+                continue  # Still active
+            if lid in existing_sale_ids:
+                continue  # Already logged
+
+            price_reliable = True
+            event_type = "sold_or_removed"
+            price_note = "listed price"
+            skip = False
+
+            if sk == "ebay":
+                is_obo = prev_l.get("is_obo", False)
+                buying_options = prev_l.get("buying_options", [])
+                # Skip Best Offer listings — final price is unknown
+                if is_obo or "BEST_OFFER" in buying_options:
+                    skip = True
+                elif "AUCTION" in buying_options and "FIXED_PRICE" not in buying_options:
+                    event_type = "auction_ended"
+                    price_note = "final bid"
+                else:
+                    event_type = "sold_at_ask"
+                    price_note = "asking price"
+
+            if skip:
+                continue
+
+            new_sales.append({
+                "id": lid,
+                "source": prev_l.get("source"),
+                "source_key": sk,
+                "title": prev_l.get("title"),
+                "price": prev_l.get("price"),
+                "price_reliable": price_reliable,
+                "price_note": price_note,
+                "url": prev_l.get("url"),
+                "image_url": prev_l.get("image_url"),
+                "edition": prev_l.get("edition"),
+                "plate_number": prev_l.get("plate_number"),
+                "target": prev_l.get("target"),
+                "disappeared_at": now,
+                "event_type": event_type,
+            })
+
+    if new_sales:
+        sales_history.extend(new_sales)
+        sales_history.sort(key=lambda x: x.get("disappeared_at", ""), reverse=True)
+        sales_history = sales_history[:500]
+        save_sales_history(sales_history)
+        print(f"  [Sales] Logged {len(new_sales)} new sold/ended listing(s) → sales_history.json")
+
     print()
     print("=" * 60)
     print(f"[Stats] Results: {len(all_listings)} total listings, {new_count} new")
@@ -2652,5 +2759,452 @@ def run_scraper():
     return output
 
 
+# ============================================================
+# LIVEAUCTIONEERS PRICE RESULTS (confirmed sales)
+# ============================================================
+
+# Per-bird archive searches: (primary_keyword, [extra_terms_to_try])
+# Searched as "audubon {keyword} {edition}" against LA archive.
+# Focused on editions you actively collect.
+LA_PRICE_RESULT_BIRDS = [
+    ("flamingo",              ["flamingo"]),
+    ("great blue heron",      ["great blue heron"]),
+    ("roseate spoonbill",     ["spoonbill"]),
+    ("snowy heron",           ["snowy heron", "snowy egret"]),
+    ("louisiana heron",       ["louisiana heron"]),
+    ("white pelican",         ["white pelican"]),
+    ("wild turkey",           ["wild turkey"]),
+    ("snowy owl",             ["snowy owl"]),
+    ("trumpeter swan",        ["trumpeter swan"]),
+    ("whooping crane",        ["whooping crane"]),
+    ("ivory-billed woodpecker",["ivory billed woodpecker", "ivory-billed"]),
+    ("carolina parakeet",     ["carolina parrot", "carolina parakeet"]),
+    ("bald eagle",            ["bald eagle", "bird of washington"]),
+    ("brown pelican",         ["brown pelican"]),
+    ("pileated woodpecker",   ["pileated woodpecker"]),
+    ("osprey",                ["fish hawk", "osprey"]),
+    ("night heron",           ["night heron"]),
+    ("barn owl",              ["barn owl"]),
+    ("ruby-throated hummingbird", ["ruby throated hummingbird"]),
+    ("scarlet ibis",          ["scarlet ibis"]),
+    ("passenger pigeon",      ["passenger pigeon"]),
+    ("mockingbird",           ["mockingbird"]),
+    ("baltimore oriole",      ["baltimore oriole"]),
+    ("swallow-tailed hawk",   ["swallow tailed hawk"]),
+    ("golden eagle",          ["golden eagle"]),
+    ("great horned owl",      ["great horned owl"]),
+    ("scarlet tanager",       ["scarlet tanager"]),
+    ("wood ibis",             ["wood ibis"]),
+    ("gyrfalcon",             ["gyrfalcon", "jer falcon"]),
+    ("long-billed curlew",    ["long billed curlew"]),
+]
+
+LA_PRICE_RESULT_EDITIONS = [
+    ("octavo",  "Octavo 1st Ed"),
+    ("havell",  "Havell"),
+    ("bien",    "Bien"),
+]
+
+
+def _fetch_la_archive_page(keyword):
+    """Fetch an LA archive search page, return response or None."""
+    url = f"https://www.liveauctioneers.com/search/?keyword={quote_plus(keyword)}&status=archive&sort=-sale_date"
+    if HAS_CURL_CFFI:
+        try:
+            resp = curl_requests.get(url, impersonate="chrome131", timeout=25)
+            if resp.status_code == 200 and len(resp.text) > 5000:
+                return resp
+        except Exception:
+            pass
+    scraper = get_cloudscraper()
+    if scraper:
+        try:
+            resp = scraper.get(url, timeout=25)
+            if resp.status_code == 200 and len(resp.text) > 5000:
+                return resp
+        except Exception:
+            pass
+    return None
+
+
+def _parse_la_archive_data(html):
+    """Extract window.__data from LA archive page HTML.
+    Returns the parsed dict or None.
+    """
+    soup = BeautifulSoup(html, "lxml")
+    for script in soup.find_all("script"):
+        text = script.string or ""
+        if not text.startswith("window.__data="):
+            continue
+        json_str = text[len("window.__data="):]
+        # Strip trailing JS (semicolons, extra statements)
+        json_str = re.sub(r'\bundefined\b', 'null', json_str)
+        json_str = re.sub(r'\bNaN\b', 'null', json_str)
+        try:
+            decoder = json.JSONDecoder()
+            data, _ = decoder.raw_decode(json_str)
+            return data
+        except Exception:
+            pass
+    return None
+
+
+def _extract_sold_items(data, edition_hint, search_keyword):
+    """Extract sold items from parsed window.__data using
+    the archive page structure: data['search']['itemIds'] +
+    data['itemSummary']['byId'].
+    """
+    records = []
+    now = datetime.now(timezone.utc).isoformat()
+
+    try:
+        item_ids = data.get("search", {}).get("itemIds", [])
+        by_id = data.get("itemSummary", {}).get("byId", {})
+    except Exception:
+        return []
+
+    for item_id in item_ids:
+        item = by_id.get(str(item_id)) or by_id.get(item_id)
+        if not item:
+            continue
+
+        if not item.get("isSold"):
+            continue
+
+        title = item.get("title", "")
+        if not title or is_excluded(title):
+            continue
+
+        sale_price = safe_price(str(item.get("salePrice") or item.get("leadingBid") or 0))
+        if not sale_price or sale_price < 10:
+            continue  # Passed / no sale
+
+        catalog_id = item.get("catalogId", "")
+        url = f"https://www.liveauctioneers.com/item/{item_id}-{''.join(c if c.isalnum() else '-' for c in title.lower()).strip('-')[:60]}/"
+        image_url = f"https://p1.liveauctioneers.com/{catalog_id}/{item_id}_1_lg.jpg" if catalog_id else None
+
+        # Sale date from Unix timestamp
+        ts = item.get("lotEndTimeEstimatedTs") or item.get("saleStartTs")
+        sale_date = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat() if ts else now
+
+        edition = detect_edition(title)
+        if edition == "Unknown":
+            edition = edition_hint
+
+        records.append({
+            "id": make_id("la_results", str(item_id)),
+            "source": "LiveAuctioneers (Results)",
+            "source_key": "la_results",
+            "title": title,
+            "price": sale_price,
+            "price_reliable": True,
+            "price_note": "hammer price",
+            "url": url,
+            "image_url": image_url,
+            "edition": edition,
+            "plate_number": extract_plate_number(title),
+            "target": detect_target(title, search_keyword),
+            "disappeared_at": sale_date,
+            "event_type": "auction_ended",
+            "scraped_at": now,
+            "search_keyword": search_keyword,
+        })
+
+    return records
+
+
+def scrape_la_price_results():
+    """Scrape LiveAuctioneers archive for past sale prices, bird by bird.
+    Searches each target bird × each edition (octavo, havell, bien).
+    Intended to be run manually every couple of months as a backfill.
+    Returns list of sale records.
+    """
+    print("[*] Scraping LiveAuctioneers Archive (price results, per bird)...")
+    records = []
+    seen_ids = set()
+    total_searches = len(LA_PRICE_RESULT_BIRDS) * len(LA_PRICE_RESULT_EDITIONS)
+    done = 0
+
+    for bird_name, keywords in LA_PRICE_RESULT_BIRDS:
+        for edition_term, edition_label in LA_PRICE_RESULT_EDITIONS:
+            done += 1
+            # Use the most specific keyword for this bird
+            query = f"audubon {keywords[0]} {edition_term}"
+            print(f"  [{done}/{total_searches}] '{query}'...", end=" ", flush=True)
+
+            resp = _fetch_la_archive_page(query)
+            if not resp:
+                print("fetch failed")
+                time.sleep(1)
+                continue
+
+            data = _parse_la_archive_data(resp.text)
+            if not data:
+                print("parse failed")
+                time.sleep(1)
+                continue
+
+            new_recs = _extract_sold_items(data, edition_label, query)
+            added = 0
+            for r in new_recs:
+                if r["id"] not in seen_ids:
+                    seen_ids.add(r["id"])
+                    records.append(r)
+                    added += 1
+
+            total_found = data.get("search", {}).get("totalFound", 0)
+            print(f"{added} new ({total_found} total on page)")
+            time.sleep(1.5)
+
+    print(f"\n  [OK] LA Price Results: {len(records)} unique sale records")
+    return records
+
+
+# ============================================================
+# EBAY SOLD LISTINGS (Finding API: findCompletedItems)
+# ============================================================
+
+# Broad eBay sold searches — one per edition type, paginated.
+# No bird filtering: catches everything Audubon that sold.
+EBAY_SOLD_SEARCHES = [
+    ("audubon octavo birds",   "Octavo 1st Ed"),
+    ("audubon havell print",   "Havell"),
+    ("audubon bien print",     "Bien"),
+    ("audubon 8vo birds",      "Octavo 1st Ed"),  # catches "8vo" listings
+]
+
+
+def scrape_ebay_sold():
+    """Scrape eBay completed/sold listings for ALL Audubon prints.
+    Uses Finding API findCompletedItems — same App ID (client_id) as Browse API.
+    Broad searches by edition, not bird-by-bird, so no bird is missed.
+    Paginates up to 10 pages (1000 results) per query.
+    Skips Best Offer listings (final price unknowable).
+    Intended to be run manually ~weekly.
+    Returns list of sale records.
+    """
+    print("[*] Scraping eBay Sold Listings (broad, all birds)...")
+
+    if not EBAY_CONFIG_PATH.exists():
+        print(f"  [!] Missing {EBAY_CONFIG_PATH} — skipping")
+        return []
+    try:
+        config = json.loads(EBAY_CONFIG_PATH.read_text())
+        app_id = config["client_id"]  # Finding API uses App ID directly, no OAuth needed
+    except (json.JSONDecodeError, KeyError) as e:
+        print(f"  [!] Bad ebay_config.json: {e}")
+        return []
+
+    FINDING_URL = "https://svcs.ebay.com/services/search/FindingService/v1"
+    # Finding API: pass auth as URL params (most reliable) + header for global-id
+    finding_headers = {
+        "X-EBAY-SOA-GLOBAL-ID": "EBAY-US",
+    }
+    FINDING_BASE_PARAMS = {
+        "OPERATION-NAME": "findCompletedItems",
+        "SECURITY-APPNAME": app_id,
+        "SERVICE-VERSION": "1.13.0",
+        "RESPONSE-DATA-FORMAT": "JSON",
+        "GLOBAL-ID": "EBAY-US",
+    }
+
+    records = []
+    seen_ids = set()
+    now = datetime.now(timezone.utc).isoformat()
+
+    for query, edition_fallback in EBAY_SOLD_SEARCHES:
+        page = 1
+        query_total = 0
+        print(f"  '{query}'")
+
+        while page <= 10:  # Finding API max 100/page, 10 pages = 1000 results
+            params = {
+                **FINDING_BASE_PARAMS,
+                "keywords": query,
+                "paginationInput.entriesPerPage": "100",
+                "paginationInput.pageNumber": str(page),
+                "sortOrder": "EndTimeSoonest",
+                "itemFilter(0).name": "SoldItemsOnly",
+                "itemFilter(0).value": "true",
+                "itemFilter(1).name": "MinPrice",
+                "itemFilter(1).value": str(EBAY_PRICE_FLOOR),
+                "itemFilter(1).paramName": "Currency",
+                "itemFilter(1).paramValue": "USD",
+            }
+
+            try:
+                resp = requests.get(FINDING_URL, headers=finding_headers,
+                                    params=params, timeout=20)
+                resp.raise_for_status()
+                data = resp.json()
+            except Exception as e:
+                print(f"    [!] Page {page} fetch error: {e}")
+                break
+
+            response_root = data.get("findCompletedItemsResponse", [{}])[0]
+
+            # Check for API-level errors
+            ack = response_root.get("ack", [""])[0]
+            if ack not in ("Success", "Warning"):
+                error_msg = (response_root.get("errorMessage", [{}])[0]
+                             .get("error", [{}])[0]
+                             .get("message", [""])[0])
+                print(f"    [!] API error (ack={ack}): {error_msg}")
+                break
+
+            try:
+                items = (response_root
+                         .get("searchResult", [{}])[0]
+                         .get("item", []))
+                total_pages = int(response_root
+                                  .get("paginationOutput", [{}])[0]
+                                  .get("totalPages", ["1"])[0])
+                total_entries = int(response_root
+                                   .get("paginationOutput", [{}])[0]
+                                   .get("totalEntries", ["0"])[0])
+            except (KeyError, IndexError, TypeError, ValueError):
+                items = []
+                total_pages = 1
+                total_entries = 0
+
+            added_this_page = 0
+            for item in items:
+                try:
+                    title = item.get("title", [""])[0]
+                    if not title or is_excluded(title):
+                        continue
+                    title_lower = title.lower()
+                    # Must mention audubon
+                    if "audubon" not in title_lower:
+                        continue
+
+                    # Selling state — must have actually sold
+                    selling_status = item.get("sellingStatus", [{}])[0]
+                    selling_state = selling_status.get("sellingState", [""])[0]
+                    if selling_state != "EndedWithSales":
+                        continue
+
+                    listing_info = item.get("listingInfo", [{}])[0]
+
+                    # Skip Best Offer — final price is unknown
+                    is_obo = listing_info.get("bestOfferEnabled", ["false"])[0].lower() == "true"
+                    if is_obo:
+                        continue
+
+                    listing_type = listing_info.get("listingType", [""])[0]
+                    is_auction = "auction" in listing_type.lower()
+                    event_type = "auction_ended" if is_auction else "sold_at_ask"
+                    price_note = "hammer price" if is_auction else "asking price"
+
+                    # Seller exclusions
+                    seller = item.get("sellerInfo", [{}])[0]
+                    seller_name = seller.get("sellerUserName", [""])[0].lower()
+                    if any(excl in seller_name for excl in EBAY_SELLER_EXCLUDE):
+                        continue
+
+                    price_val = (selling_status
+                                 .get("currentPrice", [{}])[0]
+                                 .get("__value__", ""))
+                    price = safe_price(price_val)
+                    if not price or price < EBAY_PRICE_FLOOR:
+                        continue
+
+                    item_url = item.get("viewItemURL", [""])[0]
+                    if not item_url:
+                        continue
+                    item_url_clean = item_url.split("?")[0]
+
+                    item_id = item.get("itemId", [""])[0]
+                    rec_id = make_id("ebay_sold", item_id or item_url_clean)
+                    if rec_id in seen_ids:
+                        continue
+
+                    end_time = listing_info.get("endTime", [""])[0]
+                    image_url = item.get("galleryURL", [None])[0]
+
+                    edition = detect_edition(title)
+                    if edition == "Unknown":
+                        edition = edition_fallback
+
+                    seen_ids.add(rec_id)
+                    records.append({
+                        "id": rec_id,
+                        "source": "eBay (Sold)",
+                        "source_key": "ebay_sold",
+                        "title": title,
+                        "price": price,
+                        "price_reliable": True,
+                        "price_note": price_note,
+                        "url": item_url_clean,
+                        "image_url": image_url,
+                        "edition": edition,
+                        "plate_number": extract_plate_number(title),
+                        "target": detect_target(title),
+                        "disappeared_at": end_time or now,
+                        "event_type": event_type,
+                        "scraped_at": now,
+                        "search_keyword": query,
+                    })
+                    added_this_page += 1
+
+                except Exception:
+                    continue
+
+            query_total += added_this_page
+            print(f"    p{page}/{total_pages}: {added_this_page} new "
+                  f"({len(items)} results, {total_entries} total)")
+
+            if page >= total_pages:
+                break
+            page += 1
+            time.sleep(0.4)
+
+        print(f"    → {query_total} records from this query")
+        time.sleep(1)
+
+    print(f"\n  [OK] eBay Sold: {len(records)} unique sale records")
+    return records
+
+
 if __name__ == "__main__":
-    run_scraper()
+    if "--ebay-sold" in sys.argv:
+        print("=" * 60)
+        print(f"[Audubon] eBay Sold Mode - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        print("=" * 60)
+        records = scrape_ebay_sold()
+        if records:
+            history = load_sales_history()
+            existing_ids = {r["id"] for r in history}
+            new_recs = [r for r in records if r["id"] not in existing_ids]
+            if new_recs:
+                history.extend(new_recs)
+                history.sort(key=lambda x: x.get("disappeared_at", ""), reverse=True)
+                history = history[:500]
+                save_sales_history(history)
+                print(f"[Saved] {len(new_recs)} new eBay sold records ({len(history)} total)")
+            else:
+                print("[OK] No new records (all already logged)")
+        else:
+            print("[!] No sold records found")
+    elif "--price-results" in sys.argv:
+        # Scrape LiveAuctioneers past price results and merge into sales_history.json
+        print("=" * 60)
+        print(f"[Audubon] LA Price Results Mode - {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+        print("=" * 60)
+        records = scrape_la_price_results()
+        if records:
+            history = load_sales_history()
+            existing_ids = {r["id"] for r in history}
+            new_recs = [r for r in records if r["id"] not in existing_ids]
+            if new_recs:
+                history.extend(new_recs)
+                history.sort(key=lambda x: x.get("disappeared_at", ""), reverse=True)
+                history = history[:500]
+                save_sales_history(history)
+                print(f"[Saved] {len(new_recs)} new price results saved ({len(history)} total)")
+            else:
+                print("[OK] No new records (all already logged)")
+        else:
+            print("[!] No price results found")
+    else:
+        run_scraper()
