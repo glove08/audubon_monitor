@@ -1101,6 +1101,15 @@ def _extract_invaluable_lots(data, depth=0):
                 price_val = iv.get("priceResult") or iv.get("estimateLow") or iv.get("price") or ""
                 price = safe_price(str(price_val))
 
+                # Auction end time: eventDate is a Unix ms timestamp
+                ends_at = None
+                event_ms = iv.get("eventDate")
+                if event_ms and isinstance(event_ms, (int, float)) and event_ms > 0:
+                    try:
+                        ends_at = datetime.fromtimestamp(event_ms / 1000, tz=timezone.utc).isoformat()
+                    except Exception:
+                        pass
+
                 # Image from photos array
                 image_url = None
                 photos = iv.get("photos", [])
@@ -1131,7 +1140,7 @@ def _extract_invaluable_lots(data, depth=0):
                                 image_url = f"https://image.invaluable.com/housePhotos/{fname}"
                 lots.append(make_listing(
                     "Invaluable", "invaluable", title, price, url,
-                    image_url=image_url
+                    image_url=image_url, ends_at=ends_at
                 ))
             return lots
 
@@ -2310,6 +2319,15 @@ def scrape_susan_rhein():
                 item_match = re.search(r'Item\s+([A-Za-z0-9][\w.-]+)', text)
                 if not item_match:
                     continue
+
+                # Skip outer layout cells that contain multiple items.
+                # Susan's pages wrap all item TDs inside a larger page-layout TD;
+                # that outer cell matches the first item ID but also contains every
+                # other item's data and ends with the pagination text ("1 2 3 … 10").
+                # Each genuine per-item cell has exactly ONE item ID.
+                if len(re.findall(r'Item\s+[A-Za-z0-9][\w.-]+', text)) > 1:
+                    continue
+
                 item_id = item_match.group(1)
                 if item_id in seen_ids:
                     continue

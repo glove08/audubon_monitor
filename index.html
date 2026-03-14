@@ -516,9 +516,10 @@ function effectivePrice(r){
   return AUCTION_SOURCES.has(r.source_key)?Math.round(r.price*BUYER_PREMIUM):r.price;
 }
 
-function PriceHistory({listing,sales}){
-  const matches=useMemo(()=>matchSalesHistory(listing,sales),[listing,sales]);
-  if(!matches.length)return null;
+function PriceHistory({listing,sales,dismissed,onDismiss}){
+  const allMatches=useMemo(()=>matchSalesHistory(listing,sales),[listing,sales]);
+  const matches=useMemo(()=>allMatches.filter(r=>!dismissed.has(r.id)),[allMatches,dismissed]);
+  if(!allMatches.length)return null;
   const withPrice=matches.filter(r=>r.price);
   const avg=withPrice.length?Math.round(withPrice.reduce((s,r)=>s+effectivePrice(r),0)/withPrice.length):null;
   const fmtD=d=>{try{return new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});}catch{return"";}};
@@ -531,7 +532,13 @@ function PriceHistory({listing,sales}){
   const evtIcon=e=>e==="auction_ended"?"🔨":e==="sold_at_ask"?"✓":"↩";
   return(
     <div style={{marginTop:14,borderTop:"1px dashed #d4c9a8",paddingTop:12}}>
-      <div style={{fontFamily:"var(--s)",fontSize:9,color:"#7a8a9a",letterSpacing:".07em",textTransform:"uppercase",marginBottom:8}}>Price History</div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+        <div style={{fontFamily:"var(--s)",fontSize:9,color:"#7a8a9a",letterSpacing:".07em",textTransform:"uppercase"}}>Price History</div>
+        {allMatches.length!==matches.length&&<div style={{fontFamily:"var(--s)",fontSize:8,color:"var(--faint)"}}>{allMatches.length-matches.length} hidden</div>}
+      </div>
+      {matches.length===0&&(
+        <div style={{fontFamily:"var(--s)",fontSize:10,color:"var(--faint)",fontStyle:"italic",padding:"4px 0"}}>All entries dismissed</div>
+      )}
       <div style={{display:"flex",flexDirection:"column",gap:4}}>
         {matches.map((r,i)=>{
           const ep=effectivePrice(r);
@@ -550,7 +557,17 @@ function PriceHistory({listing,sales}){
                   {r.price_note&&r.price_note!=="listed price"&&<span style={{color:"var(--faint)",marginLeft:4}}>· {r.price_note}</span>}
                 </div>
               </div>
-              <div style={{fontFamily:"var(--s)",fontSize:8,color:"var(--faint)",flexShrink:0}}>{fmtD(r.disappeared_at)}</div>
+              <div style={{fontFamily:"var(--s)",fontSize:8,color:"var(--faint)",flexShrink:0,marginRight:2}}>{fmtD(r.disappeared_at)}</div>
+              <button
+                onClick={e=>{e.stopPropagation();onDismiss(r.id);}}
+                title="Dismiss"
+                style={{flexShrink:0,width:16,height:16,borderRadius:"50%",border:"none",
+                  background:"rgba(120,100,80,.15)",cursor:"pointer",padding:0,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  color:"#b0a090",fontSize:9,lineHeight:1,transition:"background .15s,color .15s"}}
+                onMouseEnter={e=>{e.currentTarget.style.background="rgba(196,80,26,.18)";e.currentTarget.style.color="#c4501a";}}
+                onMouseLeave={e=>{e.currentTarget.style.background="rgba(120,100,80,.15)";e.currentTarget.style.color="#b0a090";}}
+              >&#10005;</button>
             </div>
           );
         })}
@@ -646,6 +663,18 @@ function App(){
     try{return new Set(JSON.parse(localStorage.getItem("audubon_watchlist")||"[]"));}
     catch{return new Set();}
   });
+  const[dismissedHistory,setDismissedHistory]=useState(()=>{
+    try{return new Set(JSON.parse(localStorage.getItem("audubon_dismissed_history")||"[]"));}
+    catch{return new Set();}
+  });
+  const dismissHistoryEntry=useCallback((id)=>{
+    setDismissedHistory(prev=>{
+      const next=new Set(prev);
+      next.add(id);
+      try{localStorage.setItem("audubon_dismissed_history",JSON.stringify([...next]));}catch{}
+      return next;
+    });
+  },[]);
 
   const toggleWatch=useCallback((id)=>{
     setWatchedIds(prev=>{
@@ -760,7 +789,7 @@ function App(){
                 </div>
               )}
               <p style={{fontFamily:"var(--s)",fontSize:12,color:"#6b6050",lineHeight:1.6,marginBottom:12}}>{detail.desc}</p>
-              <PriceHistory listing={detail} sales={salesData}/>
+              <PriceHistory listing={detail} sales={salesData} dismissed={dismissedHistory} onDismiss={dismissHistoryEntry}/>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",borderTop:"1px solid #e5dcc8",paddingTop:10,marginTop:12,flexWrap:"wrap",gap:8}}>
                 <span style={{display:"flex",alignItems:"center",gap:5,fontSize:11,fontFamily:"var(--s)",color:"#7b7060"}}>
                   <span style={{width:7,height:7,borderRadius:"50%",background:srcColor(detail)}}/>{detail.source}</span>
