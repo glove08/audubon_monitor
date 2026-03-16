@@ -1,5 +1,37 @@
 [
   {
+    "id": "f2fd166f3ddc",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Birds Of America  Print 1840: RED-WINGED STARLING. 216.",
+    "price": 100.0,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/358303527787",
+    "image_url": "https://i.ebayimg.com/images/g/OB4AAeSwgkVpa9SW/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-16T04:33:56.257070+00:00",
+    "event_type": "auction_ended"
+  },
+  {
+    "id": "f9782a9cfc5b",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1840s Audubon Octavo Print - SPOTTED SANDPIPER - Plate 342 - Hand Colored",
+    "price": 99.99,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/177960655850",
+    "image_url": "https://i.ebayimg.com/images/g/foMAAeSweBZppqFu/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 342,
+    "target": null,
+    "disappeared_at": "2026-03-16T04:33:56.257070+00:00",
+    "event_type": "auction_ended"
+  },
+  {
     "id": "92c7a797bca3",
     "source": "eBay",
     "source_key": "ebay",
