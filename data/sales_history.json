@@ -1,5 +1,37 @@
 [
   {
+    "id": "3f061f4f2564",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "John James Audubon 1785-1851 Columbia Jay From The Birds of America, Plate 96",
+    "price": 39.99,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/397693294836",
+    "image_url": "https://i.ebayimg.com/images/g/VHYAAeSwv8loSc2B/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": 96,
+    "target": null,
+    "disappeared_at": "2026-03-16T18:27:00.784620+00:00",
+    "event_type": "auction_ended"
+  },
+  {
+    "id": "8f9a5a2033cb",
+    "source": "Audubon Art",
+    "source_key": "audubonart",
+    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 442 Bonapartes Gull",
+    "price": 85.0,
+    "price_reliable": true,
+    "price_note": "listed price",
+    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-442-bonapartes-gull/",
+    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-442-1-350x222.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 442,
+    "target": null,
+    "disappeared_at": "2026-03-16T18:27:00.784620+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "f2fd166f3ddc",
     "source": "eBay",
     "source_key": "ebay",
