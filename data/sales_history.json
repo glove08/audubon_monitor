@@ -1,5 +1,21 @@
 [
   {
+    "id": "f1cadeea5b6d",
+    "source": "Max Rambod",
+    "source_key": "maxrambod",
+    "title": "Audubon\u2019s first edition of Birds of America \u201cGreat American White Egret\u201d Hand Colored Lithograph",
+    "price": 885.0,
+    "price_reliable": true,
+    "price_note": "listed price",
+    "url": "https://www.maxrambod.com/pages/books/17227/james-audubon-birds-of-america/audubon-s-first-edition-of-birds-of-america-great-american-white-egret-hand-colored-lithograph",
+    "image_url": "https://maxrambod.cdn.bibliopolis.com/pictures/17227.jpg?width=320&height=427&fit=bounds&auto=webp&v=1625616901",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": "snowy heron",
+    "disappeared_at": "2026-03-18T04:34:14.743706+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "a6334c751c58",
     "source": "eBay",
     "source_key": "ebay",
