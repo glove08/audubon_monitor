@@ -1,5 +1,21 @@
 [
   {
+    "id": "aec300341ab5",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Birds Octavo 1st Ed 1840 h/c lithograph Pl 276 Black-billed Cuckoo",
+    "price": 105.0,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/117081948468",
+    "image_url": "https://i.ebayimg.com/images/g/jHsAAOSwdhxkrp6W/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 276,
+    "target": null,
+    "disappeared_at": "2026-03-18T19:34:01.359606+00:00",
+    "event_type": "auction_ended"
+  },
+  {
     "id": "f1cadeea5b6d",
     "source": "Max Rambod",
     "source_key": "maxrambod",
