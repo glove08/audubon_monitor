@@ -1,5 +1,21 @@
 [
   {
+    "id": "12f9a2eb1f98",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "John James AUDUBON / Trumpeter Swan From The Birds of America Amsterdam Edition",
+    "price": 199.99,
+    "price_reliable": true,
+    "price_note": "final bid",
+    "url": "https://www.ebay.com/itm/406757944098",
+    "image_url": "https://i.ebayimg.com/images/g/bMYAAeSw8TRpsjza/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": "trumpeter swan",
+    "disappeared_at": "2026-03-19T04:33:51.919525+00:00",
+    "event_type": "auction_ended"
+  },
+  {
     "id": "46718edd7bdf",
     "source": "eBay",
     "source_key": "ebay",
