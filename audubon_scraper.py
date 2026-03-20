@@ -1777,6 +1777,7 @@ EBAY_TITLE_EXCLUDE = [
     "sticker", "decal", "vinyl", "tapestry",
     "jigsaw", "puzzle", "cross stitch",
     "digital download", "instant download", "printable",
+    " a3 ", " a3", "a3 ", " a4 ", " a4", "a4 ",
     "dover", "national geographic", "peterson",
     "framed art print",
     "1994",
@@ -1955,6 +1956,10 @@ def scrape_ebay():
                 item_end = item.get("itemEndDate") or None
                 item_created = item.get("itemCreationDate") or None
 
+                # Bid signal: bidCount > 0 OR currentBidPrice present means real bids placed
+                bid_count = item.get("bidCount", 0) or 0
+                has_bid = bool(bid_data and bid_data.get("value") is not None) or bid_count > 0
+
                 seen_urls.add(item_url)
                 listing = make_listing(
                     "eBay", "ebay", title, price, item_url,
@@ -1965,6 +1970,8 @@ def scrape_ebay():
                 )
                 listing["buying_options"] = buying_options
                 listing["is_obo"] = "BEST_OFFER" in buying_options
+                listing["bid_count"] = bid_count
+                listing["has_bid"] = has_bid
                 listings.append(listing)
                 query_count += 1
 
@@ -2057,6 +2064,8 @@ def scrape_ebay():
                 desc = " \u00b7 ".join(desc_parts)
                 item_end = item.get("itemEndDate") or None
                 item_created = item.get("itemCreationDate") or None
+                bid_count = item.get("bidCount", 0) or 0
+                has_bid = bool(bid_data and bid_data.get("value") is not None) or bid_count > 0
                 seen_urls.add(item_url)
                 listing = make_listing(
                     "eBay", "ebay", title, price, item_url,
@@ -2065,6 +2074,8 @@ def scrape_ebay():
                 )
                 listing["buying_options"] = ["AUCTION"]
                 listing["is_obo"] = False
+                listing["bid_count"] = bid_count
+                listing["has_bid"] = has_bid
                 listings.append(listing)
                 auction_count += 1
             total = data.get("total", 0)
@@ -2723,16 +2734,40 @@ def run_scraper():
             price_note = "listed price"
             skip = False
 
-            if sk == "ebay":
+            if sk in ("invaluable", "liveauctioneers"):
+                # Auction house: listing disappeared = auction ended or lot withdrawn.
+                # Price we scraped is estimate/starting bid, not hammer price.
+                # Log the sale existence but mark price unreliable.
+                event_type = "sold_or_removed"
+                price_note = "estimate only (hammer price unknown)"
+                price_reliable = False
+
+            elif sk == "ebay":
                 is_obo = prev_l.get("is_obo", False)
                 buying_options = prev_l.get("buying_options", [])
-                # Skip Best Offer listings — final price is unknown
                 if is_obo or "BEST_OFFER" in buying_options:
-                    skip = True
+                    # BIN + Make Offer: sold but accepted price is unknown
+                    event_type = "sold_or_removed"
+                    price_note = "offer accepted (price unknown)"
+                    price_reliable = False
                 elif "AUCTION" in buying_options and "FIXED_PRICE" not in buying_options:
-                    event_type = "auction_ended"
-                    price_note = "final bid"
+                    had_bid = prev_l.get("has_bid")
+                    bid_count = prev_l.get("bid_count", 0) or 0
+                    if had_bid is None:
+                        # Pre-fix listing — bid status unknown, disregard entirely
+                        skip = True
+                    elif not had_bid and bid_count == 0:
+                        # Zero bids — did not sell. Price is a useful floor.
+                        event_type = "dns"
+                        price_note = "did not sell"
+                    else:
+                        # Auction sold but final price unknowable (sniping).
+                        # Log the sale existence; suppress the price.
+                        event_type = "sold_or_removed"
+                        price_note = "auction closed (final price unknown)"
+                        price_reliable = False
                 else:
+                    # Pure BIN — asking price is the actual sale price
                     event_type = "sold_at_ask"
                     price_note = "asking price"
 
@@ -2744,7 +2779,7 @@ def run_scraper():
                 "source": prev_l.get("source"),
                 "source_key": sk,
                 "title": prev_l.get("title"),
-                "price": prev_l.get("price"),
+                "price": prev_l.get("price") if price_reliable else None,
                 "price_reliable": price_reliable,
                 "price_note": price_note,
                 "url": prev_l.get("url"),
