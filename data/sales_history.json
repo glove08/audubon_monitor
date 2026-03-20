@@ -1,5 +1,21 @@
 [
   {
+    "id": "d0e08de92ca7",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1st Edition Audubon Octavo Print - Plate 197 Crimson-fronted Purple Finch",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/387949665077",
+    "image_url": "https://i.ebayimg.com/images/g/QYYAAOSw5QBnsM8l/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 197,
+    "target": null,
+    "disappeared_at": "2026-03-20T15:20:08.868522+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "01964b5379da",
     "source": "eBay",
     "source_key": "ebay",
