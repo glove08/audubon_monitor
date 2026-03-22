@@ -1,5 +1,37 @@
 [
   {
+    "id": "de62f07b6d85",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1st Edition Audubon Octavo Print - Plate 258 Canadian Woodpecker",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/387949698695",
+    "image_url": "https://i.ebayimg.com/images/g/en4AAOSwugtnsNFQ/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 258,
+    "target": null,
+    "disappeared_at": "2026-03-22T01:33:55.290136+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "d5f00b789674",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "JJ Audubon Octavo \u201cLittle Auk- Sea Dove\u201dNo94 Pl 469 Hand Colored",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/117091770958",
+    "image_url": "https://i.ebayimg.com/images/g/cE4AAeSwDWto6C-u/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 469,
+    "target": null,
+    "disappeared_at": "2026-03-22T01:33:55.290136+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "0552beb881f7",
     "source": "eBay",
     "source_key": "ebay",
