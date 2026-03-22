@@ -2617,7 +2617,7 @@ def run_scraper():
             listing["new_this_scan"] = True
         else:
             listing["new_this_scan"] = False
-        first = listing.get("first_seen") or now
+        first = previous_first_seen.get(listing["id"]) or now
         try:
             first_dt = datetime.fromisoformat(first.replace("Z", "+00:00"))
             age_hours = (now_dt - first_dt).total_seconds() / 3600
