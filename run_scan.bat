@@ -13,8 +13,10 @@ if errorlevel 1 echo [!] Daily scan exited with errors - continuing
 echo.
 echo Committing and pushing...
 git add data\
-git commit -m "Full run %date%"
+git commit -m "Scan data update"
+git stash
 git pull --rebase
+git stash pop
 git push
 
 echo.

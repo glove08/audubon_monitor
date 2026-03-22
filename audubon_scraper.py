@@ -2610,6 +2610,7 @@ def run_scraper():
     new_count = 0
     price_changes = []
     now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat()
     for listing in all_listings:
         if listing["id"] not in previous_ids:
             new_count += 1  # count truly-new-this-scan for stats
@@ -2646,8 +2647,6 @@ def run_scraper():
 
     if price_changes:
         print(f"  [Price] {len(price_changes)} price change(s) detected")
-
-    now = datetime.now(timezone.utc).isoformat()
 
     # Set first_seen for all listings (carry forward or set to now)
     for listing in all_listings:
@@ -2820,5 +2819,75 @@ def run_scraper():
     return output
 
 
+# ============================================================
+# EMAIL ALERTS
+# ============================================================
+
+EMAIL_CONFIG_PATH = Path(__file__).parent / "email_config.json"
+
+def send_alert_email(new_target_listings):
+    """Send a digest email for new target bird listings.
+    Requires email_config.json with gmail, app_password, and to fields.
+    """
+    if not EMAIL_CONFIG_PATH.exists():
+        return
+    try:
+        cfg = json.loads(EMAIL_CONFIG_PATH.read_text())
+        gmail = cfg.get("gmail", "")
+        app_password = cfg.get("app_password", "")
+        to_addr = cfg.get("to", gmail)
+        if not gmail or not app_password:
+            print("  [Email] email_config.json missing gmail or app_password — skipping")
+            return
+    except Exception as e:
+        print(f"  [Email] Could not read email_config.json: {e}")
+        return
+
+    import smtplib
+    import ssl
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    count = len(new_target_listings)
+    subject = f"Audubon Monitor: {count} new target listing{'s' if count != 1 else ''}"
+
+    # Build plain-text body
+    lines = [f"{count} new target bird listing{'s' if count != 1 else ''} found:\n"]
+    for l in new_target_listings:
+        price_str = f"${l['price']:,.0f}" if l.get('price') else "Price n/a"
+        lines.append(f"  {l.get('target','').title()}")
+        lines.append(f"  {l.get('title','')}")
+        lines.append(f"  {price_str} — {l.get('source','')} — {l.get('edition','')}")
+        lines.append(f"  {l.get('url','')}")
+        lines.append("")
+    lines.append("https://glove08.github.io/audubon_monitor/")
+    body = "\n".join(lines)
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = gmail
+    msg["To"] = to_addr
+    msg.attach(MIMEText(body, "plain"))
+
+    try:
+        ctx = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx) as server:
+            server.login(gmail, app_password)
+            server.sendmail(gmail, to_addr, msg.as_string())
+        print(f"  [Email] Alert sent to {to_addr} ({count} target listing{'s' if count != 1 else ''})")
+    except Exception as e:
+        print(f"  [Email] Failed to send: {e}")
+
+
 if __name__ == "__main__":
-    run_scraper()
+    result = run_scraper()
+    # Send email alert for any newly discovered target bird listings
+    if result:
+        new_targets = [
+            l for l in result.get("listings", [])
+            if l.get("is_new") and l.get("target")
+        ]
+        if new_targets:
+            send_alert_email(new_targets)
+        else:
+            print("  [Email] No new target listings — no alert sent")
