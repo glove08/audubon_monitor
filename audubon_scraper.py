@@ -2614,6 +2614,9 @@ def run_scraper():
     for listing in all_listings:
         if listing["id"] not in previous_ids:
             new_count += 1  # count truly-new-this-scan for stats
+            listing["new_this_scan"] = True
+        else:
+            listing["new_this_scan"] = False
         first = listing.get("first_seen") or now
         try:
             first_dt = datetime.fromisoformat(first.replace("Z", "+00:00"))
@@ -2885,7 +2888,7 @@ if __name__ == "__main__":
     if result:
         new_targets = [
             l for l in result.get("listings", [])
-            if l.get("is_new") and l.get("target")
+            if l.get("new_this_scan") and l.get("target")
         ]
         if new_targets:
             send_alert_email(new_targets)
