@@ -123,7 +123,7 @@ const fmtF=n=>n==null?"Price on request":`$${n.toLocaleString()}`;
 
 /* ═══ PRICE DROPS ═══ */
 function PriceDrops({changes,onDetail,listings}){
-  const drops=useMemo(()=>(changes||[]).filter(c=>c.change<0).sort((a,b)=>Math.abs(b.change_pct)-Math.abs(a.change_pct)),[changes]);
+  const drops=useMemo(()=>{const cutoff=new Date(Date.now()-48*60*60*1000).toISOString();return(changes||[]).filter(c=>c.change<0&&c.detected&&c.detected>=cutoff).sort((a,b)=>Math.abs(b.change_pct)-Math.abs(a.change_pct));},[changes]);
   const listingMap=useMemo(()=>{const m={};(listings||[]).forEach(l=>{m[l.id]=l;});return m;},[listings]);
 
   if(!drops.length) return(
@@ -753,7 +753,15 @@ function App(){
     }).catch(e=>{setError(e.message);document.getElementById("loader")?.classList.add("done");});
   },[]);
 
-  const LISTINGS=(data?.listings||[]).map(l=>({...l, images: l.images || (l.image_url ? [l.image_url] : [])}));
+  // Titles that appear in both sales history and current listings = relisted or scan glitch.
+  // Uses verbatim title match. Strip is_new from those listings and hide them from Recently Ended.
+  const endedTitleSet=useMemo(()=>new Set((salesData||[]).map(r=>r.title)),[salesData]);
+  const LISTINGS=(data?.listings||[]).map(l=>({...l,
+    images: l.images || (l.image_url ? [l.image_url] : []),
+    is_new: l.is_new && !endedTitleSet.has(l.title)
+  }));
+  const activeTitleSet=useMemo(()=>new Set(LISTINGS.map(l=>l.title)),[LISTINGS]);
+  const filteredSales=useMemo(()=>(salesData||[]).filter(r=>!activeTitleSet.has(r.title)),[salesData,activeTitleSet]);
   const meta=data?.metadata||{last_scan: data?.last_run};
   const sources=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.source))].sort()],[LISTINGS]);
   const editions=useMemo(()=>["All",...[...new Set(LISTINGS.map(x=>x.edition))]],[LISTINGS]);
@@ -896,7 +904,7 @@ function App(){
 
         <WatchList listings={LISTINGS} watchedIds={watchedIds} onRemove={toggleWatch} onDetail={setDetail} onImage={setGallery}/>
         <PriceDrops changes={data?.price_changes||[]} onDetail={setDetail} listings={LISTINGS}/>
-        <RecentlySold sales={salesData} dismissed={dismissedSales} onDismiss={dismissSaleEntry}/>
+        <RecentlySold sales={filteredSales} dismissed={dismissedSales} onDismiss={dismissSaleEntry}/>
 
         <div style={{marginBottom:12,paddingBottom:10,borderBottom:"1px solid #e5dcc8"}}>
           <div style={{display:"flex",gap:5,alignItems:"center",flexWrap:"wrap"}}>
