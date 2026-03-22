@@ -2604,14 +2604,22 @@ def run_scraper():
     all_listings = deduplicate_cross_source(all_listings)
 
     # Mark new listings and detect price changes
+    # is_new stays True for 48 hours after first_seen so listings don't
+    # disappear from the "new" pile between scan cycles.
+    NEW_WINDOW_HOURS = 48
     new_count = 0
     price_changes = []
+    now_dt = datetime.now(timezone.utc)
     for listing in all_listings:
         if listing["id"] not in previous_ids:
-            listing["is_new"] = True
-            new_count += 1
-        else:
-            listing["is_new"] = False
+            new_count += 1  # count truly-new-this-scan for stats
+        first = listing.get("first_seen") or now
+        try:
+            first_dt = datetime.fromisoformat(first.replace("Z", "+00:00"))
+            age_hours = (now_dt - first_dt).total_seconds() / 3600
+            listing["is_new"] = age_hours < NEW_WINDOW_HOURS
+        except Exception:
+            listing["is_new"] = listing["id"] not in previous_ids
 
         # Detect price changes (only for previously seen listings with prices)
         lid = listing["id"]
