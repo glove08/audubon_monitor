@@ -14,7 +14,8 @@ echo.
 echo Committing and pushing...
 git add data\
 git commit -m "Scan data update"
-git push
+git fetch origin
+git push --force-with-lease
 
 echo.
 echo ============================================================
