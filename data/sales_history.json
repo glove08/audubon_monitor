@@ -1,5 +1,21 @@
 [
   {
+    "id": "82730f49a2a9",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "3rd Ed. Audubon Birds Of America  Print 1860: BLACK  POLL WOOD WARBLER 78",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/397739966429",
+    "image_url": "https://i.ebayimg.com/images/g/OMQAAeSw65tpvXXM/s-l1600.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-25T16:33:50.926139+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "da7bc4322e08",
     "source": "eBay",
     "source_key": "ebay",
