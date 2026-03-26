@@ -1,5 +1,37 @@
 [
   {
+    "id": "8108f6c7b2f1",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Octavo   AMERICAN AVOCET   Birds of America   original   1856  Second ed",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/387961580635",
+    "image_url": "https://i.ebayimg.com/images/g/ycAAAOSwBYFntBYZ/s-l1600.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-26T22:34:02.265665+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "3045b7e29d86",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "AUDUBON'S BIRDS of AMERICA - BULLOCK'S TROPICAL - No. 218",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/303077801278",
+    "image_url": "https://i.ebayimg.com/images/g/UYIAAOSwIqRcdqMK/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": 218,
+    "target": null,
+    "disappeared_at": "2026-03-26T22:34:02.265665+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "715036cdd5be",
     "source": "eBay",
     "source_key": "ebay",
