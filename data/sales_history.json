@@ -1,5 +1,37 @@
 [
   {
+    "id": "f584331f96ac",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1st Ed. Audubon Birds Of America  Print 1840: RED-HEADED TURKEY VULTURE. 2",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/397747650253",
+    "image_url": "https://i.ebayimg.com/images/g/iEoAAeSwOyxpwCCy/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-27T17:06:15.943112+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "11e4dfb48e09",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1st Ed. Audubon Birds Of America  Print 1840: HARRIS'S BUZZARD. 5",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/206159052640",
+    "image_url": "https://i.ebayimg.com/images/g/vdgAAeSwQdppwCEm/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-27T17:06:15.943112+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "5ac38bfbbebc",
     "source": "eBay",
     "source_key": "ebay",
