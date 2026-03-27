@@ -1,5 +1,21 @@
 [
   {
+    "id": "5ac38bfbbebc",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon's \"Henslow's Bunting\", a print from \"Birds of America\" the first edition",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/327053555071",
+    "image_url": "https://i.ebayimg.com/images/g/AScAAeSwultprEyf/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-03-27T16:49:56.737797+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "8108f6c7b2f1",
     "source": "eBay",
     "source_key": "ebay",
