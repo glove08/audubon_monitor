@@ -31,6 +31,13 @@ try:
 except ImportError:
     HAS_CURL_CFFI = False
 
+# Optional: Playwright for JS-rendered / bot-protected sites (pip install playwright)
+try:
+    from playwright.sync_api import sync_playwright
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+
 DATA_DIR = Path(__file__).parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 SALES_HISTORY_PATH = DATA_DIR / "sales_history.json"
@@ -865,9 +872,21 @@ def scrape_invaluable():
 
     # --- Strategy 1: Internal search API (JSON) ---
     # Invaluable's frontend calls internal API endpoints for search results
+    # Use multiple keyword searches to catch all editions (octavo, bien, havell)
+    # and any lots whose titles don't include edition keywords.
+    _inv_keywords = [
+        "audubon+octavo",
+        "audubon+bien",
+        "audubon+havell",
+        "audubon+birds+america+print",
+    ]
     api_urls = [
-        "https://www.invaluable.com/api/search?keyword=audubon+octavo&upcoming=true&limit=96",
-        "https://www.invaluable.com/api/auction-lot/search?keyword=audubon+octavo&upcoming=true&limit=96",
+        url
+        for kw in _inv_keywords
+        for url in [
+            f"https://www.invaluable.com/api/search?keyword={kw}&upcoming=true&limit=96",
+            f"https://www.invaluable.com/api/auction-lot/search?keyword={kw}&upcoming=true&limit=96",
+        ]
     ]
 
     api_headers = {
@@ -885,8 +904,10 @@ def scrape_invaluable():
 
     def _try_api():
         results = []
+        seen_urls_api = set()
         # Try curl_cffi first (best TLS fingerprinting)
         for api_url in api_urls:
+            lots_from_url = []
             if HAS_CURL_CFFI:
                 try:
                     resp = curl_requests.get(
@@ -896,31 +917,38 @@ def scrape_invaluable():
                     if resp.status_code == 200:
                         try:
                             data = resp.json()
-                            lots = _extract_invaluable_lots(data)
-                            if lots:
-                                print(f"  [OK] Invaluable API returned {len(lots)} lots via curl_cffi")
-                                return lots
+                            lots_from_url = _extract_invaluable_lots(data)
                         except (json.JSONDecodeError, ValueError):
                             pass
                 except Exception as e:
                     print(f"  [!] curl_cffi API attempt failed: {e}")
 
-            # Try cloudscraper
-            scraper = get_cloudscraper()
-            if scraper:
-                try:
-                    resp = scraper.get(api_url, headers=api_headers, timeout=20)
-                    if resp.status_code == 200:
-                        try:
-                            data = resp.json()
-                            lots = _extract_invaluable_lots(data)
-                            if lots:
-                                print(f"  [OK] Invaluable API returned {len(lots)} lots via cloudscraper")
-                                return lots
-                        except (json.JSONDecodeError, ValueError):
-                            pass
-                except Exception as e:
-                    print(f"  [!] cloudscraper API attempt failed: {e}")
+            # Try cloudscraper if curl_cffi got nothing
+            if not lots_from_url:
+                scraper = get_cloudscraper()
+                if scraper:
+                    try:
+                        resp = scraper.get(api_url, headers=api_headers, timeout=20)
+                        if resp.status_code == 200:
+                            try:
+                                data = resp.json()
+                                lots_from_url = _extract_invaluable_lots(data)
+                            except (json.JSONDecodeError, ValueError):
+                                pass
+                    except Exception as e:
+                        print(f"  [!] cloudscraper API attempt failed: {e}")
+
+            # Dedupe across keyword queries
+            new_in_batch = 0
+            for lot in lots_from_url:
+                if lot["url"] not in seen_urls_api:
+                    seen_urls_api.add(lot["url"])
+                    results.append(lot)
+                    new_in_batch += 1
+            if new_in_batch:
+                kw_hint = api_url.split("keyword=")[1].split("&")[0] if "keyword=" in api_url else ""
+                print(f"  [OK] Invaluable API '{kw_hint}': {new_in_batch} lots")
+            time.sleep(0.5)
         return results
 
     # --- Strategy 2: Full page scrape with bot bypass ---
@@ -1168,18 +1196,219 @@ def _extract_invaluable_lots(data, depth=0):
     return lots
 
 
+def scrape_liveauctioneers_playwright():
+    """LiveAuctioneers — Playwright (real Chromium) scraper.
+    Renders the JS SPA properly, bypassing bot detection that blocks
+    curl_cffi/cloudscraper. This is the primary strategy; the API-based
+    scraper is the fallback.
+
+    Searches multiple keywords to catch octavo, bien, havell, and any lots
+    that don't carry an edition keyword in the title.
+    Deduplicates across searches before returning.
+    """
+    if not HAS_PLAYWRIGHT:
+        return []
+
+    print("[*] Scraping LiveAuctioneers (Playwright)...")
+    listings = []
+    seen_urls = set()
+
+    # All keyword searches to run
+    search_queries = [
+        "audubon octavo",
+        "audubon bien",
+        "audubon havell",
+        "audubon birds america print",
+    ]
+
+    def _extract_from_page(page, label):
+        """Given a loaded Playwright page, extract all Audubon lot listings."""
+        results = []
+        try:
+            # Strategy A: intercept window.__data (LA's primary data store)
+            data_str = page.evaluate("""
+                () => {
+                    if (window.__data) {
+                        try { return JSON.stringify(window.__data); }
+                        catch(e) { return null; }
+                    }
+                    return null;
+                }
+            """)
+            if data_str:
+                try:
+                    data = json.loads(data_str)
+                    lots = _extract_la_lots(data)
+                    if lots:
+                        print(f"    window.__data: {len(lots)} lots ({label})")
+                        results.extend(lots)
+                except (json.JSONDecodeError, ValueError):
+                    pass
+
+            # Strategy B: parse __NEXT_DATA__ if present
+            if not results:
+                next_data = page.evaluate("""
+                    () => {
+                        const el = document.getElementById('__NEXT_DATA__');
+                        return el ? el.textContent : null;
+                    }
+                """)
+                if next_data:
+                    try:
+                        data = json.loads(next_data)
+                        lots = _extract_la_lots(data)
+                        if lots:
+                            print(f"    __NEXT_DATA__: {len(lots)} lots ({label})")
+                            results.extend(lots)
+                    except (json.JSONDecodeError, ValueError):
+                        pass
+
+            # Strategy C: scrape rendered item cards from the DOM
+            if not results:
+                html = page.content()
+                soup = BeautifulSoup(html, "lxml")
+                item_links = soup.find_all("a", href=re.compile(r'/item/\d+'))
+                seen_local = set()
+                for link in item_links:
+                    href = link.get("href", "")
+                    lot_url = f"https://www.liveauctioneers.com{href}" if href.startswith("/") else href
+                    if lot_url in seen_local:
+                        continue
+                    seen_local.add(lot_url)
+
+                    container = link
+                    for _ in range(6):
+                        if container.parent:
+                            container = container.parent
+
+                    title_el = (container.find("h3") or container.find("h2")
+                                or container.find(class_=re.compile(r'title')))
+                    title = title_el.get_text(strip=True) if title_el else link.get_text(strip=True)
+                    if not title or "audubon" not in title.lower() or is_excluded(title):
+                        continue
+
+                    price_el = container.find(string=re.compile(r'\$[\d,]+'))
+                    price = safe_price(price_el) if price_el else None
+
+                    img = container.find("img")
+                    image_url = img.get("src", "") or img.get("data-src", "") if img else None
+
+                    results.append(make_listing(
+                        "LiveAuctioneers", "liveauctioneers", title, price, lot_url,
+                        image_url=image_url,
+                    ))
+                if results:
+                    print(f"    DOM cards: {len(results)} lots ({label})")
+
+        except Exception as e:
+            print(f"    [!] Extraction error ({label}): {e}")
+
+        return results
+
+    try:
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-blink-features=AutomationControlled",
+                ],
+            )
+            context = browser.new_context(
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/131.0.0.0 Safari/537.36"
+                ),
+                viewport={"width": 1280, "height": 900},
+                locale="en-US",
+                timezone_id="America/New_York",
+            )
+
+            # Remove the webdriver property that bot detectors check
+            context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            """)
+
+            page = context.new_page()
+
+            # Warm up with homepage to get cookies/session
+            try:
+                page.goto("https://www.liveauctioneers.com/", timeout=30000,
+                          wait_until="domcontentloaded")
+                page.wait_for_timeout(2000)
+            except Exception:
+                pass
+
+            # --- Keyword searches ---
+            for query in search_queries:
+                encoded = query.replace(" ", "+")
+                url = f"https://www.liveauctioneers.com/search/?keyword={encoded}"
+                try:
+                    page.goto(url, timeout=30000, wait_until="networkidle")
+                    page.wait_for_timeout(2000)
+                    lots = _extract_from_page(page, query)
+                    new_here = 0
+                    for lot in lots:
+                        if lot["url"] not in seen_urls:
+                            seen_urls.add(lot["url"])
+                            listings.append(lot)
+                            new_here += 1
+                    if new_here:
+                        print(f"  [OK] LA Playwright '{query}': {new_here} new lots")
+                except Exception as e:
+                    print(f"  [!] LA Playwright '{query}' failed: {e}")
+                time.sleep(1)
+
+            context.close()
+            browser.close()
+
+    except Exception as e:
+        print(f"  [!] Playwright session failed: {e}")
+        return []
+
+    # Dedupe
+    seen = set()
+    deduped = [l for l in listings if l["url"] not in seen and not seen.add(l["url"])]
+    print(f"  [OK] Playwright total: {len(deduped)} listings")
+    return deduped
+
+
 def scrape_liveauctioneers():
     """LiveAuctioneers.com - React SPA with heavy bot protection.
-    Strategy: Try internal search API first, then page scrape with bypass.
+    Strategy: Playwright (real browser, bypasses bot detection) first;
+    falls back to API / page scrape if Playwright is unavailable.
     """
+    # Playwright is the only approach that reliably bypasses LA's bot detection.
+    # The API and page-scrape strategies are fallbacks for environments where
+    # Playwright is not installed.
+    if HAS_PLAYWRIGHT:
+        results = scrape_liveauctioneers_playwright()
+        if results:
+            return results
+        print("  [!] Playwright returned nothing — falling back to API strategies")
+
     print("[*] Scraping LiveAuctioneers...")
     listings = []
 
     # --- Strategy 1: Internal search API ---
     # LiveAuctioneers uses internal API endpoints for search
+    # Multiple keyword searches to catch all editions (octavo, bien, havell)
+    # and auction lots whose titles don't include an edition keyword.
+    _la_keywords = [
+        "audubon+octavo",
+        "audubon+bien",
+        "audubon+havell",
+        "audubon+birds+america+print",
+    ]
     api_urls = [
-        "https://www.liveauctioneers.com/api/v1/search?keyword=audubon+octavo&sort=-relevance&status=online&limit=96",
-        "https://www.liveauctioneers.com/api/search?keyword=audubon+octavo&sort=-relevance&limit=96",
+        url
+        for kw in _la_keywords
+        for url in [
+            f"https://www.liveauctioneers.com/api/v1/search?keyword={kw}&sort=-relevance&status=online&limit=96",
+            f"https://www.liveauctioneers.com/api/search?keyword={kw}&sort=-relevance&limit=96",
+        ]
     ]
 
     api_headers = {
@@ -1195,7 +1424,10 @@ def scrape_liveauctioneers():
     }
 
     def _try_api():
+        results = []
+        seen_urls_api = set()
         for api_url in api_urls:
+            lots_from_url = []
             # Try curl_cffi
             if HAS_CURL_CFFI:
                 try:
@@ -1206,36 +1438,44 @@ def scrape_liveauctioneers():
                     if resp.status_code == 200:
                         try:
                             data = resp.json()
-                            lots = _extract_la_lots(data)
-                            if lots:
-                                print(f"  [OK] LA API returned {len(lots)} lots via curl_cffi")
-                                return lots
+                            lots_from_url = _extract_la_lots(data)
                         except (json.JSONDecodeError, ValueError):
                             pass
                 except Exception as e:
                     print(f"  [!] curl_cffi LA API failed: {e}")
 
-            # Try cloudscraper
-            scraper = get_cloudscraper()
-            if scraper:
-                try:
-                    resp = scraper.get(api_url, headers=api_headers, timeout=20)
-                    if resp.status_code == 200:
-                        try:
-                            data = resp.json()
-                            lots = _extract_la_lots(data)
-                            if lots:
-                                print(f"  [OK] LA API returned {len(lots)} lots via cloudscraper")
-                                return lots
-                        except (json.JSONDecodeError, ValueError):
-                            pass
-                except Exception:
-                    pass
-        return []
+            # Try cloudscraper if curl_cffi got nothing
+            if not lots_from_url:
+                scraper = get_cloudscraper()
+                if scraper:
+                    try:
+                        resp = scraper.get(api_url, headers=api_headers, timeout=20)
+                        if resp.status_code == 200:
+                            try:
+                                data = resp.json()
+                                lots_from_url = _extract_la_lots(data)
+                            except (json.JSONDecodeError, ValueError):
+                                pass
+                    except Exception:
+                        pass
+
+            # Dedupe across keyword queries
+            new_in_batch = 0
+            for lot in lots_from_url:
+                if lot["url"] not in seen_urls_api:
+                    seen_urls_api.add(lot["url"])
+                    results.append(lot)
+                    new_in_batch += 1
+            if new_in_batch:
+                kw_hint = api_url.split("keyword=")[1].split("&")[0] if "keyword=" in api_url else ""
+                print(f"  [OK] LA API '{kw_hint}': {new_in_batch} lots")
+            time.sleep(0.5)
+        return results
 
     # --- Strategy 2: Page scrape with bot bypass ---
     def _try_page_scrape():
-        url = "https://www.liveauctioneers.com/search/?keyword=audubon+octavo"
+        # Use broad keyword to catch octavo + bien + havell lots
+        url = "https://www.liveauctioneers.com/search/?keyword=audubon+birds+america"
         resp = None
 
         # Try curl_cffi
@@ -2491,18 +2731,22 @@ def run_scraper():
 
     # Report available bypass libraries
     bypass_status = []
+    if HAS_PLAYWRIGHT:
+        bypass_status.append("playwright ✓")
+    else:
+        bypass_status.append("playwright ✗ (pip install playwright && playwright install chromium)")
     if HAS_CLOUDSCRAPER:
         bypass_status.append("cloudscraper ✓")
     else:
-        bypass_status.append("cloudscraper ✗ (pip install cloudscraper)")
+        bypass_status.append("cloudscraper ✗")
     if HAS_CURL_CFFI:
         bypass_status.append("curl_cffi ✓")
     else:
-        bypass_status.append("curl_cffi ✗ (pip install curl_cffi)")
+        bypass_status.append("curl_cffi ✗")
     print(f"[Deps] {' | '.join(bypass_status)}")
-    if not HAS_CLOUDSCRAPER and not HAS_CURL_CFFI:
-        print("[!] No bypass libraries installed - protected sites will likely fail")
-        print("    Install with: pip install cloudscraper curl_cffi")
+    if not HAS_PLAYWRIGHT:
+        print("[!] Playwright not installed - LiveAuctioneers scraping will be unreliable")
+        print("    Install with: pip install playwright && playwright install chromium")
     print()
 
     previous = load_previous_listings()

@@ -22,6 +22,8 @@ jobs:
         run: |
           pip install requests beautifulsoup4 lxml cloudscraper
           pip install curl_cffi || echo "curl_cffi optional, skipping"
+          pip install playwright
+          playwright install chromium --with-deps
 
       - name: Create eBay config
         run: |
