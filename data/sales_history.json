@@ -1,5 +1,21 @@
 [
   {
+    "id": "e77f9013dcb6",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "After John James Audubon (American 1785-1851), Common Gallinule, Lithograph Print, Frame: 13 x 16 in. (33 x 40.6 cm.)",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/1C7A71E47A",
+    "image_url": "https://image.invaluable.com/housePhotos/weschlers/95/810795/H0143-L435169113_mid.JPG",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-04-21T22:34:50.272754+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "7353f0907819",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://susanrhein.com/gallery/1st_Plate482_M.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 482,
-    "target": null,
-    "disappeared_at": "2026-03-22T16:03:57.300288+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "81f7db75c4cf",
-    "source": "Susan Rhein",
-    "source_key": "susanrhein",
-    "title": "PIED-BELLIED DOBCHICK. Plate 483",
-    "price": 245.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://susanrhein.com/FORMgallery1d.htm#1-483A",
-    "image_url": "https://susanrhein.com/gallery/1st_Plate483a_M.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 483,
     "target": null,
     "disappeared_at": "2026-03-22T16:03:57.300288+00:00",
     "event_type": "sold_or_removed"
