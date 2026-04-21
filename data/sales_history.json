@@ -1,5 +1,21 @@
 [
   {
+    "id": "7353f0907819",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "19th C. Audubon Lithograph, Columbian Black-Tailed Deer",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/B51B3579B7",
+    "image_url": "https://image.invaluable.com/housePhotos/artemisgallery/08/811708/H4404-L435324356_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-04-21T18:14:35.705451+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "80c1bd0550de",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://susanrhein.com/gallery/1st_Plate483a_M.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 483,
-    "target": null,
-    "disappeared_at": "2026-03-22T16:03:57.300288+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "e8337049c7df",
-    "source": "Susan Rhein",
-    "source_key": "susanrhein",
-    "title": "SPRAGUE'S MISSOURI LARK. Plate 486.",
-    "price": 245.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://susanrhein.com/FORMgallery1d.htm#1-486",
-    "image_url": "https://susanrhein.com/gallery/1st_Plate486_M.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 486,
     "target": null,
     "disappeared_at": "2026-03-22T16:03:57.300288+00:00",
     "event_type": "sold_or_removed"
