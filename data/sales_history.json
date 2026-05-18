@@ -1,5 +1,21 @@
 [
   {
+    "id": "9756a752cf75",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "AUDUBON'S BIRDS of AMERICA - Plate 486 - SPRAGUE'S MISSOURI LARK",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/303517960746",
+    "image_url": "https://i.ebayimg.com/images/g/51oAAOSwkTVeckvM/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": 486,
+    "target": null,
+    "disappeared_at": "2026-05-18T16:33:52.643289+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "1978810a3aa4",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7980,22 +7996,6 @@
     "edition": "Octavo 1st Ed",
     "plate_number": null,
     "target": "green heron",
-    "disappeared_at": "2026-04-22T21:14:15.626304+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "11e7cbcc5f39",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "1st Ed. Audubon Birds Of America  Print 1840: HUTCHINS'S GOOSE. 377",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/389901734756",
-    "image_url": "https://i.ebayimg.com/images/g/73AAAeSwp2Jp4jVr/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
     "disappeared_at": "2026-04-22T21:14:15.626304+00:00",
     "event_type": "sold_or_removed"
   }
