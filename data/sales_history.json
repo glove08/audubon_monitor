@@ -1,5 +1,37 @@
 [
   {
+    "id": "98597ad563d1",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "John James Audubon Birds of America Octavo Print Hutchins' Goose Plate 377",
+    "price": 495.0,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/277202195287",
+    "image_url": "https://i.ebayimg.com/images/g/NCwAAOSw61FoS7DZ/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 377,
+    "target": null,
+    "disappeared_at": "2026-05-26T19:33:57.514581+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
+    "id": "b05713f05d78",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "4 AUDUBON BIRD PRINTS",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/AC5E6F12C4",
+    "image_url": "https://image.invaluable.com/housePhotos/cordierantiques/82/813682/H4091-L438225832_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-05-26T19:33:57.514581+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "9a07488287b8",
     "source": "eBay",
     "source_key": "ebay",
@@ -7965,38 +7997,6 @@
     "plate_number": 487,
     "target": null,
     "disappeared_at": "2026-04-29T22:29:41.545641+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "59886b562674",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon's Birds of America - 1981 - with slip cover - 2nd Printing",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/236772609285",
-    "image_url": "https://i.ebayimg.com/images/g/1GEAAeSwNhNo1GKc/s-l1600.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-04-29T22:29:41.545641+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "31cb5e4529d2",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "A part Spode \u2018Audubon Birds\u2019 series tea set",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/4EC383640C",
-    "image_url": "https://image.invaluable.com/housePhotos/gibsonsauctions/06/811406/H21402-L434845346_mid.JPG",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-04-28T15:03:38.544605+00:00",
     "event_type": "sold_or_removed"
   }
 ]
