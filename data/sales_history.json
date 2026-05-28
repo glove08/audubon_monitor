@@ -1,5 +1,21 @@
 [
   {
+    "id": "f21e6c9830ef",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "JJ AUDUBON ENGRAVING COW BUNTING",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/9D103A067B",
+    "image_url": "https://image.invaluable.com/housePhotos/wasmith/70/812970/H0049-L437330581_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-05-28T01:32:16.186220+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "97071cea1f47",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/UgcAAOSwgfVnsNb~/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 481,
-    "target": null,
-    "disappeared_at": "2026-04-29T22:29:41.545641+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "15c4f05b9f89",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "1849 Bridled Weasel Audubon Hand Colored Lithograph Plate LX Bowen Octavo Print",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "offer accepted (price unknown)",
-    "url": "https://www.ebay.com/itm/377133960663",
-    "image_url": "https://i.ebayimg.com/images/g/fiAAAeSwWi9p6PA1/s-l1600.jpg",
-    "edition": "Octavo",
-    "plate_number": null,
     "target": null,
     "disappeared_at": "2026-04-29T22:29:41.545641+00:00",
     "event_type": "sold_or_removed"
