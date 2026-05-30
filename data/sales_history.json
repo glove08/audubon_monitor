@@ -1,5 +1,37 @@
 [
   {
+    "id": "1af436a22c12",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "19th C. Audubon Lithograph, Columbian Black-Tailed Deer",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/C82901CFB4",
+    "image_url": "https://image.invaluable.com/housePhotos/artemisgallery/51/813551/H4404-L438056833_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-05-30T01:00:39.926394+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "15a849c83c0a",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st ed Octavo  GROUND DOVE  Birds of America   1840  original + bird bio",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/388970967031",
+    "image_url": "https://i.ebayimg.com/images/g/UEwAAeSwFPNox9GZ/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-05-30T01:00:39.926394+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "f71e233660d1",
     "source": "eBay",
     "source_key": "ebay",
@@ -7965,38 +7997,6 @@
     "plate_number": null,
     "target": null,
     "disappeared_at": "2026-05-01T16:16:33.722332+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "494e20f61c8d",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Octavo 1st Ed Bird Art - YELLOW SHANKS SNIPE, c1840's, Unframed",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "offer accepted (price unknown)",
-    "url": "https://www.ebay.com/itm/336561467990",
-    "image_url": "https://i.ebayimg.com/images/g/PFUAAeSwgE5p890m/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-05-01T03:28:36.400616+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "9cd7d0b8705a",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 55 Pipiry Flycatcher",
-    "price": 295.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-55-pipiry-flycatcher/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-055-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 55,
-    "target": null,
-    "disappeared_at": "2026-05-01T03:28:36.400616+00:00",
     "event_type": "sold_or_removed"
   }
 ]
