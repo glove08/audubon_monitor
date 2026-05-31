@@ -1,5 +1,21 @@
 [
   {
+    "id": "5986721837db",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "NOS VTG John James Audubon MEADOWLARK Birds of America Litho Art Print 12x9",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/147327352995",
+    "image_url": "https://i.ebayimg.com/images/g/nCEAAeSwLuFp9pN8/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-05-31T00:36:38.361296+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "35983fa519d6",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/WLMAAeSwholo1TqC/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 480,
-    "target": null,
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "ff4dc9968fa1",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "AUDUBON'S BIRDS of AMERICA - Plate 489 - MISSOURI MEADOW LARK",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "offer accepted (price unknown)",
-    "url": "https://www.ebay.com/itm/306516407651",
-    "image_url": "https://i.ebayimg.com/images/g/My4AAeSwgMRo1ToO/s-l1600.jpg",
-    "edition": "Unknown",
-    "plate_number": 489,
     "target": null,
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
