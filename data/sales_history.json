@@ -1,5 +1,21 @@
 [
   {
+    "id": "f8e60c35ae39",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Vintage Framed Audubon \"Birds Of America\" Print - Mallard Duck (Anas Boschas)",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/306960429769",
+    "image_url": "https://i.ebayimg.com/images/g/BmAAAeSwwplqBKXC/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-01T14:31:36.272711+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "9cacf9b63b53",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7980,22 +7996,6 @@
     "edition": "Octavo 1st Ed",
     "plate_number": 25,
     "target": null,
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "818407cfc6c5",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Snowy Owl Octavo Print Plate 28 J.T. Bowen c. 1840\u2019s Hand-Colored",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/277932526653",
-    "image_url": "https://i.ebayimg.com/images/g/LJQAAeSw2rlp5pTM/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 28,
-    "target": "snowy owl",
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
   }
