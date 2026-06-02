@@ -1,5 +1,21 @@
 [
   {
+    "id": "ef98db75ada8",
+    "source": "The Old Print Shop",
+    "source_key": "oldprintshop",
+    "title": "White-headed Sea Eagle, or Bald Eagle....",
+    "price": 500.0,
+    "price_reliable": true,
+    "price_note": "listed price",
+    "url": "https://oldprintshop.com/product/168812?inventoryno=35794",
+    "image_url": "https://oldprintshop.com/uploads/jpg/35794_productthumb.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": "bald eagle",
+    "disappeared_at": "2026-06-02T16:41:01.637192+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "519a77e016a3",
     "source": "eBay",
     "source_key": "ebay",
@@ -7980,22 +7996,6 @@
     "edition": "Unknown",
     "plate_number": null,
     "target": "baltimore oriole",
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "eabcd76edb4a",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "AUDUBON AQUATINT, AMERICAN ROBIN, PLATE 131 - STATE BIRD OF CONNECTICUT, MICHIGAN AND WISCONSIN",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/9D995DF4F1",
-    "image_url": "https://image.invaluable.com/housePhotos/arader/49/810849/H5989-L433792502_mid.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": "american robin",
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
   }
