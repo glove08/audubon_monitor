@@ -1,5 +1,21 @@
 [
   {
+    "id": "673098e12dc7",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "John James Audubon (1785-1851), Haitian/American, Lithograph in Colors, \"American Flamingo\"",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/6ACDB9CA4C",
+    "image_url": "https://image.invaluable.com/housePhotos/SarasotaEstateAuction/59/814059/H14580-L439024810_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": "american flamingo",
+    "disappeared_at": "2026-06-02T20:31:29.208807+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "ef98db75ada8",
     "source": "The Old Print Shop",
     "source_key": "oldprintshop",
@@ -7980,22 +7996,6 @@
     "edition": "Unknown",
     "plate_number": null,
     "target": null,
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "b2e241eb9fe7",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "AUDUBON AQUATINT, BALTIMORE ORIOLE, PLATE 12 - STATE BIRD OF MARYLAND",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/27E1A256B9",
-    "image_url": "https://image.invaluable.com/housePhotos/arader/49/810849/H5989-L433792628_mid.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": "baltimore oriole",
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
   }
