@@ -1,5 +1,21 @@
 [
   {
+    "id": "f95cbda70f34",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Plate 221 Common Purple Crow Blackbird h/c litho. Birds of America  1840",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/117217007077",
+    "image_url": "https://i.ebayimg.com/images/g/Qc0AAOSwqnVku~Yb/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 221,
+    "target": null,
+    "disappeared_at": "2026-06-03T00:36:18.399019+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "673098e12dc7",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7980,22 +7996,6 @@
     "edition": "Unknown",
     "plate_number": null,
     "target": "trumpeter swan",
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "a300300054ea",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "AUDUBON AQUATINT, CANADA GOOSE, PLATE 201",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/B5AE1A1AC2",
-    "image_url": "https://image.invaluable.com/housePhotos/arader/49/810849/H5989-L433792535_mid.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": null,
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
   }
