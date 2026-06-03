@@ -1,5 +1,21 @@
 [
   {
+    "id": "56db29097586",
+    "source": "The Old Print Shop",
+    "source_key": "oldprintshop",
+    "title": "American Widgeon.  Pl. 389.",
+    "price": 450.0,
+    "price_reliable": true,
+    "price_note": "listed price",
+    "url": "https://oldprintshop.com/product/14535?inventoryno=8002",
+    "image_url": "https://oldprintshop.com/uploads/jpg/8002_productthumb.jpg",
+    "edition": "Unknown",
+    "plate_number": 389,
+    "target": null,
+    "disappeared_at": "2026-06-03T23:31:19.919706+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "61e4badee621",
     "source": "eBay",
     "source_key": "ebay",
@@ -7980,22 +7996,6 @@
     "edition": "Unknown",
     "plate_number": null,
     "target": null,
-    "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "b2e65ed58bb8",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "AUDUBON AQUATINT, LONG-BILLED CURLEW, PLATE 231 - WITH CHARLESTON, SC IN THE BACKGROUND",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/1706A002CC",
-    "image_url": "https://image.invaluable.com/housePhotos/arader/49/810849/H5989-L433792575_mid.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
-    "target": "long-billed curlew",
     "disappeared_at": "2026-05-04T16:16:47.094852+00:00",
     "event_type": "sold_or_removed"
   }
