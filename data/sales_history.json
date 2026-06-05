@@ -1,5 +1,37 @@
 [
   {
+    "id": "cea0ada7ed08",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Birds Of America 1st Edition Print 1840 Octavo- Flycatcher- Authentic",
+    "price": 49.99,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/157970353491",
+    "image_url": "https://i.ebayimg.com/images/g/3t8AAeSwgBVqIcrh/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-05T13:33:46.084867+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
+    "id": "79f7d7df8994",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Birds Of America 1st Edition Print 1840 Octavo- Thrush- Authentic",
+    "price": 49.99,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/157970349833",
+    "image_url": "https://i.ebayimg.com/images/g/hysAAeSwK4JqIcma/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-05T13:33:46.084867+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "5aedd9f38d3f",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7966,37 +7998,5 @@
     "target": null,
     "disappeared_at": "2026-05-05T18:29:08.069458+00:00",
     "event_type": "sold_or_removed"
-  },
-  {
-    "id": "8ce03b9a527c",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon 1st Ed. Octavo Pl. 180 Pine Linnet",
-    "price": 150.0,
-    "price_reliable": true,
-    "price_note": "asking price",
-    "url": "https://www.ebay.com/itm/376214201490",
-    "image_url": "https://i.ebayimg.com/images/g/oTUAAeSwFkVoE6RU/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 180,
-    "target": null,
-    "disappeared_at": "2026-05-05T18:29:08.069458+00:00",
-    "event_type": "sold_at_ask"
-  },
-  {
-    "id": "6bf4a94998a2",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Common Gannet.  First Edition Octavo (1840-1844).",
-    "price": 75.0,
-    "price_reliable": true,
-    "price_note": "asking price",
-    "url": "https://www.ebay.com/itm/306304642273",
-    "image_url": "https://i.ebayimg.com/images/g/AM8AAeSw8I1oJkp5/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-05-05T18:29:08.069458+00:00",
-    "event_type": "sold_at_ask"
   }
 ]
