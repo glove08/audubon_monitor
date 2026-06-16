@@ -1,5 +1,21 @@
 [
   {
+    "id": "3144ab71a045",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st. Ed. Octavo Original Bird Art - SCARLET TANAGER Pair, c1840's",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/336533566594",
+    "image_url": "https://i.ebayimg.com/images/g/U2QAAeSwOhVp3jPg/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": "scarlet tanager",
+    "disappeared_at": "2026-06-16T01:33:53.519256+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "2000fa0a2a28",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://image.invaluable.com/housePhotos/diederichauctiongallery/41/811241/H23099-L434773182_mid.JPG",
     "edition": "Unknown",
     "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-05-11T16:34:05.235898+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "2641726457e0",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 421 Frigate Pelican Man of War Bird",
-    "price": 315.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-421-frigate-pelican-man-of-war-bird/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-421-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 421,
     "target": null,
     "disappeared_at": "2026-05-11T16:34:05.235898+00:00",
     "event_type": "sold_or_removed"
