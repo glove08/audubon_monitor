@@ -1,5 +1,21 @@
 [
   {
+    "id": "f509e1da0f48",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "Two Audubon Prints, No. 61 and No. 69",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/63D589B8C5",
+    "image_url": "https://image.invaluable.com/housePhotos/Newhavenauctions/61/813961/H21727-L438752435_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": 61,
+    "target": null,
+    "disappeared_at": "2026-06-18T18:15:07.449865+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "5997854dbd0b",
     "source": "eBay",
     "source_key": "ebay",
@@ -7981,22 +7997,6 @@
     "plate_number": 221,
     "target": null,
     "disappeared_at": "2026-05-20T01:33:56.873188+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "9756a752cf75",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "AUDUBON'S BIRDS of AMERICA - Plate 486 - SPRAGUE'S MISSOURI LARK",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "offer accepted (price unknown)",
-    "url": "https://www.ebay.com/itm/303517960746",
-    "image_url": "https://i.ebayimg.com/images/g/51oAAOSwkTVeckvM/s-l1600.jpg",
-    "edition": "Unknown",
-    "plate_number": 486,
-    "target": null,
-    "disappeared_at": "2026-05-18T16:33:52.643289+00:00",
     "event_type": "sold_or_removed"
   }
 ]
