@@ -1,5 +1,37 @@
 [
   {
+    "id": "2bf8c7813236",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "J J Audubon,Yellow-Billed Cuckoo Bien Edition, 1859",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/88DED23AC1",
+    "image_url": "https://image.invaluable.com/housePhotos/everard/56/814056/H19153-L439478280_mid.jpg",
+    "edition": "Bien",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-24T01:32:14.148782+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "30bf95d366bd",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st ed Octavo  SLENDER BILLED GUILLEMOT  Birds of America  original 1840",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/365880540753",
+    "image_url": "https://i.ebayimg.com/images/g/hOYAAeSwxGVo00qx/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-24T01:32:14.148782+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "a387f201930d",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7965,38 +7997,6 @@
     "plate_number": 483,
     "target": null,
     "disappeared_at": "2026-05-22T16:36:11.221932+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "109ffd92dead",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 487 Smith\u2019s Lark \u2013 Bunting",
-    "price": 65.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-487-smiths-lark-bunting/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-487-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 487,
-    "target": null,
-    "disappeared_at": "2026-05-22T16:36:11.221932+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "960def9cfb92",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Six Audubon 8vo Birds Of America c.1840 Original h/c lithographs Birds",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/117195736492",
-    "image_url": "https://i.ebayimg.com/images/g/aFMAAOSwxC5kkko3/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-05-22T13:44:34.819031+00:00",
     "event_type": "sold_or_removed"
   }
 ]
