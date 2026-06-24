@@ -1,5 +1,21 @@
 [
   {
+    "id": "af6608a39fab",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1833 JJ Audubon Cardinal Grosbeak Engraved Colored Framed Matted Bird Of America",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/188524482064",
+    "image_url": "https://i.ebayimg.com/images/g/MfoAAeSwAxtqE4F2/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-24T14:54:22.094289+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "2bf8c7813236",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-486-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 486,
-    "target": null,
-    "disappeared_at": "2026-05-22T16:36:11.221932+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "4acccf274ce7",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 483 Pied-billed Dobchick",
-    "price": 85.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-483-pied-billed-dobchick/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-483-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 483,
     "target": null,
     "disappeared_at": "2026-05-22T16:36:11.221932+00:00",
     "event_type": "sold_or_removed"
