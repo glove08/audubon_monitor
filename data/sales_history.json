@@ -1,5 +1,21 @@
 [
   {
+    "id": "338e7875eaa4",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "Antique 1856 Original Audubon 2nd Edition Octavo Number 88, Plate 438, Black Tern FRAMED",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/2EAECAF0CF",
+    "image_url": "https://image.invaluable.com/housePhotos/onesourceauctions/69/814869/H4367-L441067347_mid.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": 438,
+    "target": null,
+    "disappeared_at": "2026-06-30T01:34:25.720335+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "fe4c0f0e023e",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-372-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 372,
-    "target": null,
-    "disappeared_at": "2026-05-25T22:33:51.728242+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "0153a8174512",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "DELUXE FOLIO AUDUBON BIRDS OF AMERICA",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/F70C2258E3",
-    "image_url": "https://image.invaluable.com/housePhotos/sydneybook/08/813208/H3247-L437577689_mid.jpg",
-    "edition": "Unknown",
-    "plate_number": null,
     "target": null,
     "disappeared_at": "2026-05-25T22:33:51.728242+00:00",
     "event_type": "sold_or_removed"
