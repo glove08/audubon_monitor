@@ -1,5 +1,21 @@
 [
   {
+    "id": "5bc68a1518c4",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Birds of America. Audubon. Yellow-breasted Rail . 1st edition. 1840.",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/298464979950",
+    "image_url": "https://i.ebayimg.com/images/g/NW4AAeSw6AZqQvan/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-06-30T16:41:49.077676+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "338e7875eaa4",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/LwkAAeSwRxtqC3Op/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-05-25T22:33:51.728242+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "82e4dabb8166",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "1st Edition Octavos - Antique OriginalsAudubon 1st Ed. Octavo Pl. 372 Blue Heron",
-    "price": 1980.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-372-blue-heron/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-372-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 372,
     "target": null,
     "disappeared_at": "2026-05-25T22:33:51.728242+00:00",
     "event_type": "sold_or_removed"
