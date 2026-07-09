@@ -1,5 +1,21 @@
 [
   {
+    "id": "52b05cedb156",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "Framed Marsh Tern by John James Audubon, Photo Offset Lithograph 1971",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/1FAED7306C",
+    "image_url": "https://image.invaluable.com/housePhotos/houseofwhitley/73/815773/H20767-LcCye9fnEIrlTH_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-07-09T01:34:18.760608+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "54a6e70a3d3d",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7982,21 +7998,5 @@
     "target": null,
     "disappeared_at": "2026-06-04T16:13:45.583834+00:00",
     "event_type": "sold_at_ask"
-  },
-  {
-    "id": "9d4f55756653",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "462 Audubon Original Octavo Tufted Puffin, 2nd edition, matted",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "offer accepted (price unknown)",
-    "url": "https://www.ebay.com/itm/326865234611",
-    "image_url": "https://i.ebayimg.com/images/g/PNYAAeSwNw1qEA4P/s-l1600.jpg",
-    "edition": "Octavo Later Ed",
-    "plate_number": null,
-    "target": "atlantic puffin",
-    "disappeared_at": "2026-06-04T16:13:45.583834+00:00",
-    "event_type": "sold_or_removed"
   }
 ]
