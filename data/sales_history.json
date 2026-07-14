@@ -1,5 +1,21 @@
 [
   {
+    "id": "6f78c7ea0605",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1840 Audubon Octavo Lithograph Pl 186 Fox-coloured Finch J.T. Bowen Museum Glass",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/397797955752",
+    "image_url": "https://i.ebayimg.com/images/g/GJIAAeSwjOxpz~Qq/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 186,
+    "target": null,
+    "disappeared_at": "2026-07-14T01:33:39.191125+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "43ab3ff1426e",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7982,21 +7998,5 @@
     "target": null,
     "disappeared_at": "2026-06-04T16:13:45.583834+00:00",
     "event_type": "sold_or_removed"
-  },
-  {
-    "id": "f4fec279a9d3",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "374 Audubon Octavo Treasures - 1st Edition Snowy Egret, matted",
-    "price": 400.0,
-    "price_reliable": true,
-    "price_note": "asking price",
-    "url": "https://www.ebay.com/itm/326942936602",
-    "image_url": "https://i.ebayimg.com/images/g/dqEAAeSwA7pqEAd6/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": "snowy heron",
-    "disappeared_at": "2026-06-04T16:13:45.583834+00:00",
-    "event_type": "sold_at_ask"
   }
 ]
