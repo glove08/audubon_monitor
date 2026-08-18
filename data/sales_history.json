@@ -1,5 +1,21 @@
 [
   {
+    "id": "7e8025cf44f4",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st ed Octavo  BLACK THROATED GREEN WOOD WARBLER  Birds of America  1840",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/387018621086",
+    "image_url": "https://i.ebayimg.com/images/g/Y4sAAOSwGthmSqHO/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-08-18T01:33:49.420288+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "824d1b5e97ed",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/umQAAOSwWkVkrlTP/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 297,
-    "target": null,
-    "disappeared_at": "2026-07-13T17:11:09.314428+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "86bd5de8e1c4",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Californian Partridge Oriole 1st ed. Octavo h/c litho. c. 1840. ORIGINAL",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/117285965230",
-    "image_url": "https://i.ebayimg.com/images/g/XDgAAOSwWOJks~Ns/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
     "target": null,
     "disappeared_at": "2026-07-13T17:11:09.314428+00:00",
     "event_type": "sold_or_removed"
