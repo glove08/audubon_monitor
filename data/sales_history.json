@@ -1,5 +1,21 @@
 [
   {
+    "id": "977347a22aec",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Original J.J. Audubon 1st Edition Octavo Lithograph, \"White-winged Silvery Gull\"",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/336726096733",
+    "image_url": "https://i.ebayimg.com/images/g/nE8AAeSw65Bqci5S/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-08-18T16:46:18.879227+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "7e8025cf44f4",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/XY8AAeSwLYRpjafz/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-07-13T17:11:09.314428+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "1e1320e22cdb",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon. Cock of the Plains. 8vo Plate 297. Birds of America h/c litho 1st ed.",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/117286320618",
-    "image_url": "https://i.ebayimg.com/images/g/umQAAOSwWkVkrlTP/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 297,
     "target": null,
     "disappeared_at": "2026-07-13T17:11:09.314428+00:00",
     "event_type": "sold_or_removed"
