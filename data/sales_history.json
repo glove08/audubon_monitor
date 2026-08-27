@@ -1,5 +1,21 @@
 [
   {
+    "id": "f815a904f78b",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon  3rd ed Octavo    RED BACKED SANDPIPER   1859   original    plate 332",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/389544836370",
+    "image_url": "https://i.ebayimg.com/images/g/UZwAAeSw1u1peIHk/s-l1600.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": 332,
+    "target": null,
+    "disappeared_at": "2026-08-27T16:52:04.024995+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "c46dd4d5e9d7",
     "source": "Old Florida Bookshop",
     "source_key": "oldflorida",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/jnIAAOSwVBRllwRp/s-l960.jpg",
     "edition": "Octavo Later Ed",
     "plate_number": 474,
-    "target": null,
-    "disappeared_at": "2026-07-20T19:56:36.811331+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "d0b6732931da",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Plate 308 Least Water Rail , Birds of America, 1857-1871 ",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/327257382898",
-    "image_url": "https://i.ebayimg.com/images/g/qEoAAOSwkoxllwkC/s-l960.jpg",
-    "edition": "Octavo Later Ed",
-    "plate_number": 308,
     "target": null,
     "disappeared_at": "2026-07-20T19:56:36.811331+00:00",
     "event_type": "sold_or_removed"
