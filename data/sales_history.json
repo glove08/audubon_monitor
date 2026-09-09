@@ -1,5 +1,21 @@
 [
   {
+    "id": "e5bec7a68a7b",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "The Birds of America by John James Audubon, 1962, 4th Printing",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/800602043775",
+    "image_url": "https://i.ebayimg.com/images/g/eYEAAeSwpoNqfI58/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-09-09T16:58:41.217160+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "2a7769948984",
     "source": "Audubon Art",
     "source_key": "audubonart",
@@ -7979,22 +7995,6 @@
     "image_url": "https://susanrhein.com/gallery1st/FIRST_Plate163_M.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 163,
-    "target": null,
-    "disappeared_at": "2026-07-27T18:02:15.027097+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "40ba8e7e860b",
-    "source": "Susan Rhein",
-    "source_key": "susanrhein",
-    "title": "SHARP TAILED FINCH. Plate 174.",
-    "price": 295.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://susanrhein.com/Octavo_1stEd_P4.htm#FIRST-174",
-    "image_url": "https://susanrhein.com/gallery1st/FIRST_Plate174_M.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 174,
     "target": null,
     "disappeared_at": "2026-07-27T18:02:15.027097+00:00",
     "event_type": "sold_or_removed"
