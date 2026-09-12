@@ -1,5 +1,37 @@
 [
   {
+    "id": "2aa03db59e70",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Octavo 1st Edition  Bird Art - CANADA JAY (pair w/young),  c1840's",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/336635888020",
+    "image_url": "https://i.ebayimg.com/images/g/6PcAAeSw10tqLB9y/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-09-12T15:05:10.282178+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "04668c842dc0",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Octavo 1st Edition  Bird Art - LEAST WATER-RAIL,  c1840's",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/336635867568",
+    "image_url": "https://i.ebayimg.com/images/g/hxIAAeSwLpRqLBrS/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-09-12T15:05:10.282178+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "1bfd449bad3a",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7966,37 +7998,5 @@
     "target": null,
     "disappeared_at": "2026-07-29T16:49:27.930754+00:00",
     "event_type": "sold_or_removed"
-  },
-  {
-    "id": "2b69f50a2971",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Common Pine Finch.  First Edition Octavo (1840-1844).",
-    "price": 75.0,
-    "price_reliable": true,
-    "price_note": "asking price",
-    "url": "https://www.ebay.com/itm/306303316406",
-    "image_url": "https://i.ebayimg.com/images/g/nsoAAeSwoNZoJTn-/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-07-29T01:34:08.668023+00:00",
-    "event_type": "sold_at_ask"
-  },
-  {
-    "id": "8ce03b9a527c",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon 1st Ed. Octavo Pl. 180 Pine Linnet",
-    "price": 150.0,
-    "price_reliable": true,
-    "price_note": "asking price",
-    "url": "https://www.ebay.com/itm/376214201490",
-    "image_url": "https://i.ebayimg.com/images/g/oTUAAeSwFkVoE6RU/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 180,
-    "target": null,
-    "disappeared_at": "2026-07-28T17:24:39.387341+00:00",
-    "event_type": "sold_at_ask"
   }
 ]
