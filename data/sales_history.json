@@ -1,5 +1,21 @@
 [
   {
+    "id": "977347a22aec",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Original J.J. Audubon 1st Edition Octavo Lithograph, \"White-winged Silvery Gull\"",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/336726096733",
+    "image_url": "https://i.ebayimg.com/images/g/nE8AAeSw65Bqci5S/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-09-26T01:35:01.771445+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "f8e83daa3793",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://i.ebayimg.com/images/g/XDgAAOSwWOJks~Ns/s-l1600.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-08-26T01:08:25.808617+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "9a21b5f2b8f3",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "Audubon Plate 283 Ground Dove 1st Octavo h/c litho. Birds of America  1840",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/117361833602",
-    "image_url": "https://i.ebayimg.com/images/g/-ekAAOSwPC5koEaG/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 283,
     "target": null,
     "disappeared_at": "2026-08-26T01:08:25.808617+00:00",
     "event_type": "sold_or_removed"
