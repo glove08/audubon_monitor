@@ -1,5 +1,21 @@
 [
   {
+    "id": "f567dba36d72",
+    "source": "Audubon Art",
+    "source_key": "audubonart",
+    "title": "Audubon 1st Ed. Octavo Pl. 235 Clarke\u2019s Nutcracker",
+    "price": 150.0,
+    "price_reliable": true,
+    "price_note": "listed price",
+    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-235-clarkes-nutcracker/",
+    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-235-1-350x552.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 235,
+    "target": null,
+    "disappeared_at": "2026-10-03T04:29:05.749743+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "384e60bacb89",
     "source": "Audubon Art",
     "source_key": "audubonart",
@@ -7980,22 +7996,6 @@
     "edition": "Octavo 1st Ed",
     "plate_number": null,
     "target": "mockingbird",
-    "disappeared_at": "2026-09-15T16:40:25.829879+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "00f069b28756",
-    "source": "eBay",
-    "source_key": "ebay",
-    "title": "1st Ed. Audubon Birds Of America  Print 1840: CAT BIRD. 140",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "auction closed (final price unknown)",
-    "url": "https://www.ebay.com/itm/206542486231",
-    "image_url": "https://i.ebayimg.com/images/g/qvwAAeSwS2BqnyB5/s-l1600.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": null,
-    "target": null,
     "disappeared_at": "2026-09-15T16:40:25.829879+00:00",
     "event_type": "sold_or_removed"
   }
