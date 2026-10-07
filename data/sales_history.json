@@ -1,5 +1,21 @@
 [
   {
+    "id": "50c17808ac73",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "The Birds of America by John James Audubon, 1962, 4th Printing",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/800738916422",
+    "image_url": "https://i.ebayimg.com/images/g/eYEAAeSwpoNqfI58/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-07T16:03:51.746804+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "8428d93e3e70",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-054-scaled-350x559.jpg",
     "edition": "Unknown",
     "plate_number": 54,
-    "target": null,
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "a3a23478d7d2",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 55, Cuvier\u2019s Kinglet",
-    "price": 480.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-55-cuviers-kinglet/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-055-scaled-350x486.jpg",
-    "edition": "Unknown",
-    "plate_number": 55,
     "target": null,
     "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
