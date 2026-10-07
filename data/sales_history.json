@@ -1,5 +1,21 @@
 [
   {
+    "id": "6e98a7bbafb6",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "19th C. Audubon Lithograph, Columbian Black-Tailed Deer",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/D958C15C36",
+    "image_url": "https://image.invaluable.com/housePhotos/artemisgallery/33/820233/H4404-LMQYLCh4HsQWPG_mid.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-07T19:54:03.839385+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "50c17808ac73",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-050-scaled-350x574.jpg",
     "edition": "Unknown",
     "plate_number": 50,
-    "target": null,
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "283db949ab57",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 54, Bobolink",
-    "price": 480.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-54-bobolink/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-054-scaled-350x559.jpg",
-    "edition": "Unknown",
-    "plate_number": 54,
     "target": null,
     "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
