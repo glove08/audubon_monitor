@@ -1,5 +1,21 @@
 [
   {
+    "id": "ec6be44cdd63",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "J. J. Audubon Royal Octavo Edition (1840-44) Plate #361 Wood Ibis",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/178088937515",
+    "image_url": "https://i.ebayimg.com/images/g/NhAAAeSwQW9p7XTI/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 361,
+    "target": "wood ibis",
+    "disappeared_at": "2026-10-08T01:35:25.251278+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "6e98a7bbafb6",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-040-scaled-350x569.jpg",
     "edition": "Unknown",
     "plate_number": 40,
-    "target": null,
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "7fd919cf53a7",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 50, Magnolia Warbler",
-    "price": 480.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-50-magnolia-warbler/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-050-scaled-350x574.jpg",
-    "edition": "Unknown",
-    "plate_number": 50,
     "target": null,
     "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
