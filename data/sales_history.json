@@ -1,5 +1,21 @@
 [
   {
+    "id": "dd935832979c",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "JJ Audubon Octavo \u201cLittle Auk- Sea Dove\u201dNo94 Pl 469 Hand Colored",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/117442111150",
+    "image_url": "https://i.ebayimg.com/images/g/cE4AAeSwDWto6C-u/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 469,
+    "target": null,
+    "disappeared_at": "2026-10-09T01:35:21.202948+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "47ab9b549a45",
     "source": "Artsy (Graves International Art)",
     "source_key": "artsy",
@@ -7980,22 +7996,6 @@
     "edition": "Unknown",
     "plate_number": 216,
     "target": "wood ibis",
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "1a0a2b136c93",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 246, Eider Duck",
-    "price": 2800.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-246-eider-duck/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-246-scaled-350x231.jpg",
-    "edition": "Unknown",
-    "plate_number": 246,
-    "target": null,
     "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
   }
