@@ -1,5 +1,21 @@
 [
   {
+    "id": "799e9fa1b425",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "JOHN JAMES LAFOREST AUDUBON (NY, 1785-1851)",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/38CCE4CA17",
+    "image_url": "https://image.invaluable.com/housePhotos/thomastonauction/51/820651/H0134-LZMon096N8ALFi_mid.JPG",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-15T01:32:02.869528+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "da0f65bbe917",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-206-scaled-350x514.jpg",
     "edition": "Unknown",
     "plate_number": 206,
-    "target": null,
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "f9d875dcd2b5",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 221, Mallard Duck",
-    "price": 3600.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-221-mallard-duck/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-221-scaled-350x234.jpg",
-    "edition": "Unknown",
-    "plate_number": 221,
     "target": null,
     "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
