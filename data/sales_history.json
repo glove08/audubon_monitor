@@ -1,5 +1,37 @@
 [
   {
+    "id": "29b8589f5a53",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon  1st ed Octavo    LEWIS' WOODPECKER    Birds of America   1840  original",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/366134865022",
+    "image_url": "https://i.ebayimg.com/images/g/5goAAeSwnylpbe7b/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-16T01:31:49.893817+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
+    "id": "5f56b60c5ff8",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "JJ Audubon Octavo \u201cLittle Auk- Sea Dove\u201dNo94 Pl 469 Hand Colored",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/117455605554",
+    "image_url": "https://i.ebayimg.com/images/g/cE4AAeSwDWto6C-u/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 469,
+    "target": null,
+    "disappeared_at": "2026-10-16T01:31:49.893817+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "097473be6c06",
     "source": "eBay",
     "source_key": "ebay",
@@ -7965,38 +7997,6 @@
     "plate_number": null,
     "target": null,
     "disappeared_at": "2026-10-06T01:35:40.838084+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "5518e2c5b228",
-    "source": "Invaluable",
-    "source_key": "invaluable",
-    "title": "3 J. J. AUDUBON DOUBLE ELEPHANT BIRD ENGRAVINGS",
-    "price": null,
-    "price_reliable": false,
-    "price_note": "estimate only (hammer price unknown)",
-    "url": "https://www.invaluable.com/auction-lot/32838C200F",
-    "image_url": "https://image.invaluable.com/housePhotos/theauctionbarnct/08/819608/H23040-LpuL5Km4xxK2HN_mid.jpg",
-    "edition": "Havell",
-    "plate_number": null,
-    "target": null,
-    "disappeared_at": "2026-10-06T01:35:40.838084+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "2b36a0ee5579",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon Havell Ed. Pl. 276, King Duck",
-    "price": 18000.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-havell-ed-pl-276-king-duck/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2026/09/HAV-0276-02_eq.jpg",
-    "edition": "Havell",
-    "plate_number": 276,
-    "target": null,
-    "disappeared_at": "2026-10-05T19:53:29.308804+00:00",
     "event_type": "sold_or_removed"
   }
 ]
