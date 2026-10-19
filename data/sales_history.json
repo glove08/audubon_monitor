@@ -1,5 +1,21 @@
 [
   {
+    "id": "968984c4e31c",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st Ed Octavo Bird Art - BAY-BREASTED  WOOD WARBLER, c1840's, Framed",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/335897478991",
+    "image_url": "https://i.ebayimg.com/images/g/328AAOSwespn8Y-y/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-19T19:17:12.537323+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "74acc38f209a",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-318-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 318,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "6b0d4982de0f",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 319 Wilson\u2019s Plover",
-    "price": 95.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-319-wilsons-plover/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-319-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 319,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
