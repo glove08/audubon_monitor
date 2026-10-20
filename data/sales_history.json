@@ -1,5 +1,21 @@
 [
   {
+    "id": "500f4034f14c",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "VNTG Audubon Bachman's Pinewood Finch Plate 176 Birds Of America Ed Royal Octavo",
+    "price": 50.0,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/306461052532",
+    "image_url": "https://i.ebayimg.com/images/g/38sAAeSwaptop3S6/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 176,
+    "target": null,
+    "disappeared_at": "2026-10-20T18:17:00.811568+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "c1e2fcc12b70",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-212-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 212,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "40df85e0c7e7",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 302 White-tailed Ptarmigan",
-    "price": 95.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-302-white-tailed-ptarmigan/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-302-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 302,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
