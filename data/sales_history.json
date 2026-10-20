@@ -1,5 +1,21 @@
 [
   {
+    "id": "42d8ddc8cc3d",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st Ed. Octavo Bird Art - BLACK-THROATED GREEN WOOD WARBLER, c1840's",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/335897491947",
+    "image_url": "https://i.ebayimg.com/images/g/UoUAAeSw0Aln8ZQG/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-20T19:16:57.714794+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "500f4034f14c",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-202-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 202,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "a7c77859a008",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 212 Common Cow-bird",
-    "price": 95.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-212-common-cow-bird/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-212-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 212,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
