@@ -1,5 +1,21 @@
 [
   {
+    "id": "c1e2fcc12b70",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Octavo Birds Of America Print GREAT CAROLINA WREN 117",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/198382371489",
+    "image_url": "https://i.ebayimg.com/images/g/k-oAAeSw5AhqA6vt/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-20T04:16:58.380273+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "968984c4e31c",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-302-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 302,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "e9585bb1ad70",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 318 Rocky Mountain Plover",
-    "price": 95.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-318-rocky-mountain-plover/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-318-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 318,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
