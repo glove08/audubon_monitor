@@ -1,5 +1,21 @@
 [
   {
+    "id": "94352fc01976",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st Edition Octavo Bird Art  -CHESNUT-SIDED WOOD WARBLER, c1840's",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/335897503763",
+    "image_url": "https://i.ebayimg.com/images/g/4JYAAeSwqwhn8ZZY/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-21T17:00:08.424902+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "1613d04517d4",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-187-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 187,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "40527a6a5d38",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 193 Black-and-yellow-crowned Finch",
-    "price": 95.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-193-black-and-yellow-crowned-finch/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-193-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 193,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
