@@ -1,5 +1,21 @@
 [
   {
+    "id": "ab3b37477478",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon 1st ed Octavo   COMMON BLUE BIRD   Birds of America 1840 original pl 134",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/365545224625",
+    "image_url": "https://i.ebayimg.com/images/g/444AAOSwD5NoAd54/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 134,
+    "target": null,
+    "disappeared_at": "2026-10-28T01:31:51.275535+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "06ccb1f5e0de",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-306-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 306,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "ba22d79c735d",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 309 Great Red-breasted Rail, or fresh water Marsh Hen",
-    "price": 285.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-309-great-red-breasted-rail-or-fresh-water-marsh-hen/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-309-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 309,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
