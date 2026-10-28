@@ -1,5 +1,21 @@
 [
   {
+    "id": "e391efc34f03",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Original Octavo Matted, California Turkey Buzzard, plate 1",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "offer accepted (price unknown)",
+    "url": "https://www.ebay.com/itm/157064915120",
+    "image_url": "https://i.ebayimg.com/images/g/cs4AAeSwCVVoQc4e/s-l1600.jpg",
+    "edition": "Octavo",
+    "plate_number": 1,
+    "target": null,
+    "disappeared_at": "2026-10-28T20:05:25.804667+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "3655ef38f38e",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-269-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 269,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "ccfa728c6845",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 292 Welcome Partridge",
-    "price": 285.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-292-welcome-partridge/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-292-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 292,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
