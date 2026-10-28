@@ -1,5 +1,21 @@
 [
   {
+    "id": "3655ef38f38e",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon's Birds of America : The Royal Octavo Edition John James",
+    "price": 64.23,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/227579543245",
+    "image_url": "https://i.ebayimg.com/images/g/~wEAAeSwSnVq2uOX/s-l640.jpg",
+    "edition": "Octavo",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-28T17:03:13.033864+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "ab3b37477478",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-292-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 292,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "26fc93d8308e",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 306 Sora Rail",
-    "price": 285.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-306-sora-rail/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-306-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 306,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
