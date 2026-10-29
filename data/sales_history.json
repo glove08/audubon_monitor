@@ -1,5 +1,21 @@
 [
   {
+    "id": "077853aa6cd2",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "1856 Audubon  Bowen Octavo Chipping Squirrel  original print with COA",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/840035216655",
+    "image_url": "https://i.ebayimg.com/images/g/HSMAAeSwzkRq1TlP/s-l1600.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-29T01:31:47.401998+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "e391efc34f03",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-218-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 218,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "4f1bd01bba95",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 269 Banded three-toed Woodpecker",
-    "price": 285.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-269-banded-three-toed-woodpecker/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-269-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 269,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
