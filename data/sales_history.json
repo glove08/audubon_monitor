@@ -1,5 +1,21 @@
 [
   {
+    "id": "e49d20ae0718",
+    "source": "Invaluable",
+    "source_key": "invaluable",
+    "title": "Audubon, Havell Ed - Dusky Duck [Anas Obscura]. 302",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "estimate only (hammer price unknown)",
+    "url": "https://www.invaluable.com/auction-lot/F21EBC9C70",
+    "image_url": "https://image.invaluable.com/housePhotos/trillium/53/821453/H20843-LoiCTXsOUBprk5_mid.jpg",
+    "edition": "Havell",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-10-29T08:05:14.208433+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "077853aa6cd2",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-200-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 200,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "f6ccb5fc5002",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 218 Bullock\u2019s Troopial",
-    "price": 285.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-218-bullocks-troopial/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-218-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 218,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
