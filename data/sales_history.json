@@ -1,5 +1,21 @@
 [
   {
+    "id": "090c9f95c30d",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon's \"Henslow's Bunting\", a print from \"Birds of America\" the first edition",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/327419970935",
+    "image_url": "https://i.ebayimg.com/images/g/AScAAeSwultprEyf/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-11-02T21:12:23.881496+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "5c1008d25fcb",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-179-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 179,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "18137da93721",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 406 Golden Eye Duck",
-    "price": 405.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-406-golden-eye-duck/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-406-1-350x222.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 406,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
