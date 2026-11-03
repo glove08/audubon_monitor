@@ -1,5 +1,21 @@
 [
   {
+    "id": "51dc0b28258c",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "THREE John Audubon BIRDS OF AMERICA prints 25\" x 21\" in pine frames",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/287697287340",
+    "image_url": "https://i.ebayimg.com/images/g/C7sAAeSwA-tqyLGu/s-l1600.jpg",
+    "edition": "Unknown",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-11-03T21:12:08.794240+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "257f3e27564c",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-191-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 191,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "e9bed8990bba",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 416 Double-crested Cormorant",
-    "price": 440.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-416-double-crested-cormorant/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-416-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 416,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
