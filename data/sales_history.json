@@ -1,5 +1,21 @@
 [
   {
+    "id": "e14806f52e77",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon Common Scaup Duck Pl 498 Birds Of America 1st Edition Royal Octavo",
+    "price": 55.0,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/365981148306",
+    "image_url": "https://i.ebayimg.com/images/g/-soAAOSwWdJnhnha/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 498,
+    "target": null,
+    "disappeared_at": "2026-11-05T02:31:22.182539+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "564768d551d7",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-399-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 399,
-    "target": null,
-    "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "4f5c1483a489",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 177 Lincoln\u2019s Pinewood Finch",
-    "price": 480.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-177-lincolns-pinewood-finch/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-177-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 177,
     "target": null,
     "disappeared_at": "2026-10-07T04:03:01.100563+00:00",
     "event_type": "sold_or_removed"
