@@ -1,5 +1,21 @@
 [
   {
+    "id": "f87c3ee15dc3",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Antique John James Audubon Octavo Lithograph Pl. 382 \"Trumpeter Swan\" c.1840 ",
+    "price": null,
+    "price_reliable": false,
+    "price_note": "auction closed (final price unknown)",
+    "url": "https://www.ebay.com/itm/198781541511",
+    "image_url": "https://i.ebayimg.com/images/g/OyEAAeSw~0pq3hpT/s-l1600.jpg",
+    "edition": "Octavo 1st Ed",
+    "plate_number": 382,
+    "target": "trumpeter swan",
+    "disappeared_at": "2026-11-15T16:42:21.214139+00:00",
+    "event_type": "sold_or_removed"
+  },
+  {
     "id": "9e656ea303a5",
     "source": "Invaluable",
     "source_key": "invaluable",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-208-scaled-350x243.jpg",
     "edition": "Unknown",
     "plate_number": 208,
-    "target": null,
-    "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "2e16aaacb294",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon\u2019s Watercolors Pl. 209, Wilson\u2019s Plover",
-    "price": 360.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubons-watercolors-pl-209-wilsons-plover/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/04/AWC-209-scaled-350x236.jpg",
-    "edition": "Unknown",
-    "plate_number": 209,
     "target": null,
     "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
     "event_type": "sold_or_removed"
