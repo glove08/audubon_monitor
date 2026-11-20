@@ -1,5 +1,21 @@
 [
   {
+    "id": "b5df16eae3a0",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon GREAT CINEREOUS OWL 2nd Edition Octavo print HAND COLORED Original",
+    "price": 95.0,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/336493366458",
+    "image_url": "https://i.ebayimg.com/images/g/-0gAAOSwwTJnx6Mb/s-l1600.jpg",
+    "edition": "Octavo Later Ed",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-11-20T02:31:23.658224+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "4164af99f0e2",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-353-1-350x222.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 353,
-    "target": null,
-    "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "56568a8697ba",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 124 Short-billed Marsh Wren",
-    "price": 390.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-124-short-billed-marsh-wren/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-124-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 124,
     "target": null,
     "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
     "event_type": "sold_or_removed"
