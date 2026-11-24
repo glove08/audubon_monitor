@@ -1,5 +1,21 @@
 [
   {
+    "id": "00d963541e23",
+    "source": "eBay",
+    "source_key": "ebay",
+    "title": "Audubon's Birds of America: The Royal Octavo Edition Audubon, John James har...",
+    "price": 20.94,
+    "price_reliable": true,
+    "price_note": "asking price",
+    "url": "https://www.ebay.com/itm/336890602250",
+    "image_url": "https://i.ebayimg.com/images/g/4QgAAeSwvEhrBG6t/s-l1200.jpg",
+    "edition": "Octavo",
+    "plate_number": null,
+    "target": null,
+    "disappeared_at": "2026-11-24T17:28:52.014559+00:00",
+    "event_type": "sold_at_ask"
+  },
+  {
     "id": "5f78fb8b624b",
     "source": "eBay",
     "source_key": "ebay",
@@ -7979,22 +7995,6 @@
     "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-127-1-350x552.jpg",
     "edition": "Octavo 1st Ed",
     "plate_number": 127,
-    "target": null,
-    "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
-    "event_type": "sold_or_removed"
-  },
-  {
-    "id": "23b3e1cbeb5f",
-    "source": "Audubon Art",
-    "source_key": "audubonart",
-    "title": "Audubon 1st Ed. Octavo Pl. 128 Hudson\u2019s Bay Titmouse",
-    "price": 440.0,
-    "price_reliable": true,
-    "price_note": "listed price",
-    "url": "https://www.audubonart.com/product/audubon-1st-ed-octavo-pl-128-hudsons-bay-titmouse/",
-    "image_url": "https://www.audubonart.com/wp-content/uploads/2023/06/OEOC-128-1-350x552.jpg",
-    "edition": "Octavo 1st Ed",
-    "plate_number": 128,
     "target": null,
     "disappeared_at": "2026-10-08T04:00:19.568571+00:00",
     "event_type": "sold_or_removed"
